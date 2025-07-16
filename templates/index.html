@@ -231,11 +231,39 @@ return `
 
 function copyCode(btn) {
   const code = btn.nextElementSibling.textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    btn.textContent = "✅ Copied!";
-    setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
-  });
+
+  // Modern clipboard API
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = "✅ Copied!";
+      setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
+    }).catch(() => fallbackCopy(code, btn));
+  } else {
+    // Fallback for older or mobile browsers
+    fallbackCopy(code, btn);
+  }
 }
+
+function fallbackCopy(text, btn) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";  // avoid scroll jump
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    document.execCommand('copy');
+    btn.textContent = "✅ Copied!";
+  } catch (err) {
+    btn.textContent = "❌ Failed";
+  }
+
+  document.body.removeChild(textarea);
+  setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
+}
+
 
 function copyEntireReply(replyId) {
   const el = document.getElementById(replyId);
