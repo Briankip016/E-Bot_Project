@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-from openai import OpenAI
+import openai
 
 app = Flask(__name__, template_folder="templates")
 CORS(app)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
 def home():
@@ -30,11 +31,11 @@ def ask():
         prompt = f"Explain this topic in 3 clear sentences for a beginner: {prompt}"
 
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
-        reply = response.choices[0].message.content
+        reply = response.choices[0].message["content"]
         return jsonify({"reply": reply.strip()})
     except Exception as e:
         return jsonify({"reply": f"❌ Error: {str(e)}"})
