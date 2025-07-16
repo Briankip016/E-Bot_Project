@@ -212,14 +212,21 @@
   });
 
   // Wrap the full message in a container with copy-all
-  return `
-    <div id="reply-${replyId}" class="bot-reply-wrapper">
-      ${formatted}
-      <div style="margin-top: 8px; text-align: right;">
-        <button onclick="copyEntireReply('reply-${replyId}')" style="font-size: 12px; padding: 6px 10px; border: none; border-radius: 6px; background: #007acc; color: white; cursor: pointer;">📄 Copy All</button>
-      </div>
-    </div>
-  `;
+return `
+  <div style="position: relative; display: inline-block; width: 100%;">
+    <button onclick="copyCode(this)" style="
+      position:absolute;
+      top:8px;
+      right:8px;
+      font-size:12px;
+      cursor:pointer;
+      padding: 4px 8px;
+      z-index: 2;
+    ">📋 Copy</button>
+    <pre style="margin-top: 28px;"><code>${escaped}</code></pre>
+  </div>
+`;
+
 }
 
 function copyCode(btn) {
