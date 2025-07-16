@@ -190,139 +190,106 @@
     </div>
   </div>
 
-  <script>
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
-    }
-
-    function quickPrompt(text) {
-      document.getElementById("prompt").value = text;
-    }
-
-    function formatResponse(text, replyId) {
-  // Format code blocks with individual copy buttons
-  const formatted = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return `
-      <div style="position: relative;">
-        <button onclick="copyCode(this)" style="position:absolute; top:8px; right:8px; font-size:12px; cursor:pointer;">📋 Copy</button>
-        <pre><code>${escaped}</code></pre>
-      </div>
-    `;
-  });
-
-  // Wrap the full message in a container with copy-all
-return `
-  <div style="position: relative; display: inline-block; width: 100%;">
-    <button onclick="copyCode(this)" style="
-      position:absolute;
-      top:8px;
-      right:8px;
-      font-size:12px;
-      cursor:pointer;
-      padding: 4px 8px;
-      z-index: 2;
-    ">📋 Copy</button>
-    <pre style="margin-top: 28px;"><code>${escaped}</code></pre>
-  </div>
-`;
-
-}
-
-function copyCode(btn) {
-  const code = btn.nextElementSibling.textContent;
-
-  // Modern clipboard API
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(code).then(() => {
-      btn.textContent = "✅ Copied!";
-      setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
-    }).catch(() => fallbackCopy(code, btn));
-  } else {
-    // Fallback for older or mobile browsers
-    fallbackCopy(code, btn);
-  }
-}
-
-function fallbackCopy(text, btn) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";  // avoid scroll jump
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-
-  try {
-    document.execCommand('copy');
-    btn.textContent = "✅ Copied!";
-  } catch (err) {
-    btn.textContent = "❌ Failed";
+ <script>
+  function toggleTheme() {
+    document.body.classList.toggle("dark");
   }
 
-  document.body.removeChild(textarea);
-  setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
-}
+  function quickPrompt(text) {
+    document.getElementById("prompt").value = text;
+  }
 
-
-function copyEntireReply(replyId) {
-  const el = document.getElementById(replyId);
-  if (!el) return;
-
-  const text = el.innerText.replace("📄 Copy All", ""); // avoid copying the button label
-  navigator.clipboard.writeText(text).then(() => {
-    alert("✅ Full reply copied!");
-  });
-}
-
-let replyCounter = 0;
-
-async function askBot() {
-  const input = document.getElementById("prompt");
-  const chat = document.getElementById("chat");
-  const mode = document.getElementById("mode").value;
-  const prompt = input.value.trim();
-  if (!prompt) return;
-
-  const userMsg = document.createElement("div");
-  userMsg.className = "message user";
-  userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
-  chat.appendChild(userMsg);
-
-  const botMsg = document.createElement("div");
-  botMsg.className = "message bot";
-  botMsg.id = "loading-msg";
-  botMsg.innerHTML = `<em>Bot is thinking...</em>`;
-  chat.appendChild(botMsg);
-  chat.scrollTop = chat.scrollHeight;
-
-  input.value = "";
-
-  try {
-    const res = await fetch("/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, mode })
+  function formatResponse(text) {
+    return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+      const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return `
+        <div style="position: relative;">
+          <button onclick="copyCode(this)" style="position:absolute; top:8px; right:8px; font-size:12px; cursor:pointer;">📋 Copy</button>
+          <pre><code>${escaped}</code></pre>
+        </div>
+      `;
     });
-
-    const data = await res.json();
-    document.getElementById("loading-msg").remove();
-
-    const reply = document.createElement("div");
-    reply.className = "message bot";
-    const replyId = `r${++replyCounter}`;
-    reply.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply, replyId)}`;
-    chat.appendChild(reply);
-    chat.scrollTop = chat.scrollHeight;
-  } catch (error) {
-    document.getElementById("loading-msg").remove();
-    const errorMsg = document.createElement("div");
-    errorMsg.className = "message bot";
-    errorMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
-    chat.appendChild(errorMsg);
   }
-}
 
-  </script>
+  function copyCode(btn) {
+    const code = btn.nextElementSibling.textContent;
+
+    // Modern browser and HTTPS
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
+      }).catch(() => fallbackCopy(code, btn));
+    } else {
+      fallbackCopy(code, btn);
+    }
+  }
+
+  function fallbackCopy(text, btn) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      document.execCommand('copy');
+      btn.textContent = "✅ Copied!";
+    } catch (err) {
+      btn.textContent = "❌ Failed";
+    }
+
+    document.body.removeChild(textarea);
+    setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
+  }
+
+  async function askBot() {
+    const input = document.getElementById("prompt");
+    const chat = document.getElementById("chat");
+    const mode = document.getElementById("mode").value;
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
+    const userMsg = document.createElement("div");
+    userMsg.className = "message user";
+    userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
+    chat.appendChild(userMsg);
+
+    const botMsg = document.createElement("div");
+    botMsg.className = "message bot";
+    botMsg.id = "loading-msg";
+    botMsg.innerHTML = `<em>Bot is thinking...</em>`;
+    chat.appendChild(botMsg);
+    chat.scrollTop = chat.scrollHeight;
+
+    input.value = "";
+
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, mode })
+      });
+
+      const data = await res.json();
+      document.getElementById("loading-msg").remove();
+
+      const reply = document.createElement("div");
+      reply.className = "message bot";
+      reply.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
+      chat.appendChild(reply);
+      chat.scrollTop = chat.scrollHeight;
+    } catch (error) {
+      document.getElementById("loading-msg").remove();
+      const errorMsg = document.createElement("div");
+      errorMsg.className = "message bot";
+      errorMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
+      chat.appendChild(errorMsg);
+    }
+  }
+</script>
+
 </body>
 </html>
