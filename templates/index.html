@@ -201,20 +201,38 @@
       document.getElementById("prompt").value = text;
     }
 
-    function formatResponse(text, replyId) {
-  // Format code blocks with individual copy buttons
-  const formatted = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    function formatResponse(text) {
+  // Replace code blocks with styled <pre> elements and copy buttons
+  return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return `
-      <div style="position: relative;">
-        <button onclick="copyCode(this)" style="position:absolute; top:8px; right:8px; font-size:12px; cursor:pointer;">📋 Copy</button>
-        <pre><code>${escaped}</code></pre>
+      <div style="position: relative; margin-top: 8px;">
+        <button onclick="copyCode(this)" style="
+          position:absolute;
+          top:8px;
+          right:8px;
+          font-size:12px;
+          cursor:pointer;
+          padding: 4px 8px;
+          z-index: 2;
+        ">📋 Copy</button>
+        <pre style="padding-top: 36px;"><code>${escapedCode}</code></pre>
       </div>
     `;
   });
 
   // Wrap the full message in a container with copy-all
-return `
+  return `
+    <div style="position: relative; display: inline-block; width: 100%;">
+      <button onclick="copyEntireReply('${replyId}')" style="
+        position:absolute;
+        top:8px;
+        right:8px;
+        font-size:12px;
+        cursor:pointer;
+        padding: 4px 8px;
+        z-index: 2;
+      ">📋 Copy All</button>
   <div style="position: relative; display: inline-block; width: 100%;">
     <button onclick="copyCode(this)" style="
       position:absolute;
