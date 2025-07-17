@@ -306,16 +306,19 @@ async function askBot() {
     });
 
     const data = await res.json();
-    document.getElementById("loading-msg").remove();
+
+    const loadingMsg = document.getElementById("loading-msg");
+    if (loadingMsg) loadingMsg.remove();
 
     const reply = document.createElement("div");
     reply.className = "message bot";
-    const replyId = `r${++replyCounter}`;
-    reply.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply, replyId)}`;
+    reply.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
     chat.appendChild(reply);
     chat.scrollTop = chat.scrollHeight;
   } catch (error) {
-    document.getElementById("loading-msg").remove();
+    const loadingMsg = document.getElementById("loading-msg");
+    if (loadingMsg) loadingMsg.remove();
+
     const errorMsg = document.createElement("div");
     errorMsg.className = "message bot";
     errorMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
