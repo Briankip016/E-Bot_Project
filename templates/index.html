@@ -99,14 +99,12 @@
       align-self: flex-end;
       background: var(--user-bg);
       color: var(--user-text);
-      position: relative;
     }
 
     .bot {
       align-self: flex-start;
       background: var(--bot-bg);
       color: var(--bot-text);
-      position: relative;
     }
 
     .input-section {
@@ -118,12 +116,25 @@
       flex-wrap: wrap;
     }
 
-    input[type="text"], select, .edit-input {
+    select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    textarea#prompt {
       flex: 1;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 16px;
+      font-family: inherit;
+      resize: none;
+      overflow: hidden;
+      min-height: 44px;
+      max-height: 200px;
+      line-height: 1.5;
     }
 
     button {
@@ -140,25 +151,14 @@
       background: #218838;
     }
 
-    .edit-btn {
-      background: #ffa500;
-      color: black;
-      padding: 4px 8px;
-      font-size: 12px;
-      border-radius: 4px;
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-    }
-
     pre {
       background: #0001;
       padding: 10px;
       border-radius: 8px;
       overflow-x: auto;
       font-family: monospace;
-      position: relative;
       margin-top: 6px;
+      position: relative;
     }
 
     .copy-btn {
@@ -201,6 +201,11 @@
       .main {
         width: 100%;
       }
+
+      .toggle-btn {
+        font-size: 12px;
+        padding: 4px 6px;
+      }
     }
 
     @media (max-width: 600px) {
@@ -209,7 +214,7 @@
         gap: 10px;
       }
 
-      input[type="text"], select, button, .edit-input {
+      textarea#prompt, select, button {
         width: 100%;
         box-sizing: border-box;
       }
@@ -237,7 +242,7 @@
         <option value="quiz">🧠 Quiz</option>
         <option value="general">💡 General</option>
       </select>
-      <input type="text" id="prompt" placeholder="Ask anything..." />
+      <textarea id="prompt" placeholder="Ask anything..." rows="1" oninput="autoResize(this)"></textarea>
       <button onclick="askBot()">Send</button>
     </div>
   </div>
@@ -268,28 +273,17 @@
       });
     }
 
-    function makeEditable(msgDiv, originalText) {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.className = "edit-input";
-      input.value = originalText;
-      msgDiv.innerHTML = "";
-      msgDiv.appendChild(input);
-      input.focus();
-
-      input.onblur = () => {
-        msgDiv.innerHTML = `<strong>You:</strong> ${input.value}`;
-        addEditButton(msgDiv, input.value);
-      };
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
     }
 
-    function addEditButton(msgDiv, text) {
-      const editBtn = document.createElement("button");
-      editBtn.className = "edit-btn";
-      editBtn.textContent = "✏️ Edit";
-      editBtn.onclick = () => makeEditable(msgDiv, text);
-      msgDiv.appendChild(editBtn);
-    }
+    document.getElementById("prompt").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault(); // stop new line
+        askBot(); // send message
+      }
+    });
 
     async function askBot() {
       const input = document.getElementById("prompt");
@@ -301,7 +295,6 @@
       const userMsg = document.createElement("div");
       userMsg.className = "message user";
       userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
-      addEditButton(userMsg, prompt);
       chat.appendChild(userMsg);
 
       const botMsg = document.createElement("div");
@@ -310,6 +303,7 @@
       chat.appendChild(botMsg);
       chat.scrollTop = chat.scrollHeight;
       input.value = "";
+      autoResize(input);
 
       try {
         const res = await fetch("/ask", {
