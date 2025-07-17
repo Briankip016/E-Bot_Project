@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💬 AI Code Assistant</title>
+  <title>💬 AI Code Learning Assistant</title>
   <style>
     :root {
       --bg-color: #f7f9fc;
       --text-color: #333;
       --user-bg: #dcf8c6;
       --bot-bg: #f1f0f0;
+      --user-text: #000;
+      --bot-text: #000;
     }
 
     body.dark {
@@ -17,6 +19,8 @@
       --text-color: #eee;
       --user-bg: #004d40;
       --bot-bg: #2e2e2e;
+      --user-text: #b2dfdb;
+      --bot-text: #d1f0ff;
     }
 
     body {
@@ -33,7 +37,7 @@
     .sidebar {
       width: 250px;
       background: #0d1117;
-      color: white;
+      color: #fff;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -41,127 +45,148 @@
 
     .sidebar h2 {
       font-size: 18px;
+      margin-bottom: 16px;
     }
 
     .sidebar button {
       background: #161b22;
-      color: white;
       border: none;
+      color: #fff;
       padding: 10px;
-      margin-top: 12px;
       border-radius: 6px;
+      margin-bottom: 8px;
+      text-align: left;
       cursor: pointer;
+    }
+
+    .sidebar button:hover {
+      background: #30363d;
     }
 
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
+      max-width: 100%;
     }
 
     .header {
+      padding: 16px;
+      background: #007acc;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 16px;
-      background: #007acc;
-      color: white;
-      position: relative;
-    }
-
-    .toggle-btn, .hamburger {
-      background: none;
-      border: 1px solid white;
-      border-radius: 6px;
-      padding: 4px 10px;
-      cursor: pointer;
-      color: white;
-      font-size: 14px;
-    }
-
-    .hamburger-menu {
-      display: none;
-      position: absolute;
-      top: 50px;
-      left: 12px;
-      background: #222;
-      padding: 10px;
-      border-radius: 8px;
-      z-index: 100;
-    }
-
-    .hamburger-menu button {
-      width: 100%;
-      background: #333;
-      color: white;
-      padding: 8px;
-      margin-bottom: 5px;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
     }
 
     .messages {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
+      background: var(--bg-color);
     }
 
     .message {
-      margin: 10px 0;
+      margin: 12px 0;
       padding: 12px 16px;
       border-radius: 18px;
       max-width: 85%;
-      white-space: pre-wrap;
       word-wrap: break-word;
+      white-space: pre-wrap;
+      line-height: 1.5;
     }
 
     .user {
       align-self: flex-end;
       background: var(--user-bg);
+      color: var(--user-text);
     }
 
     .bot {
       align-self: flex-start;
       background: var(--bot-bg);
+      color: var(--bot-text);
     }
 
-    .input-container {
+    .input-section {
       display: flex;
-      gap: 8px;
-      padding: 10px;
+      padding: 12px;
       border-top: 1px solid #ccc;
       background: var(--bg-color);
+      align-items: flex-end;
     }
 
-    #mode {
-      flex: 0 0 auto;
-      padding: 8px;
-      font-size: 14px;
+    select {
+      margin-right: 8px;
+      height: 40px;
+      border-radius: 6px;
+      padding: 6px;
     }
 
     textarea {
       flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 16px;
-      border: 1px solid #ccc;
       resize: none;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      min-height: 40px;
       max-height: 150px;
       overflow-y: auto;
     }
 
-    .send-btn {
+    button {
       background: #28a745;
       color: white;
       border: none;
       padding: 10px 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
+      margin-left: 8px;
     }
 
-    @media (max-width: 768px) {
+    button:hover {
+      background: #218838;
+    }
+
+    pre {
+      background: #0001;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: monospace;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border: none;
+      background: #ccc;
+      border-radius: 4px;
+    }
+
+    .dark pre {
+      background: #0004;
+    }
+
+    .toggle-btn {
+      background: none;
+      color: white;
+      border: 1px solid white;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    @media (max-width: 800px) {
       body {
         flex-direction: column;
       }
@@ -170,21 +195,60 @@
         display: none;
       }
 
-      .hamburger {
+      .header {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .header .toggle-btn,
+      .header .hamburger-btn {
+        margin-left: auto;
+      }
+
+      .hamburger-btn {
+        background: none;
+        color: white;
+        font-size: 24px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .hamburger-menu {
+        display: none;
+        position: absolute;
+        top: 60px;
+        left: 10px;
+        background: #161b22;
+        padding: 10px;
+        border-radius: 6px;
+      }
+
+      .hamburger-menu button {
+        display: block;
+        width: 100%;
+        margin: 4px 0;
+      }
+
+      .hamburger-open .hamburger-menu {
         display: block;
       }
 
-      .input-container {
-        flex-direction: column;
+      .input-section {
+        flex-wrap: nowrap;
+        gap: 8px;
       }
 
-      .send-btn, #mode, textarea {
-        width: 100%;
+      select {
+        flex: 0 0 auto;
       }
 
-      .toggle-btn {
-        font-size: 12px;
-        padding: 3px 8px;
+      textarea {
+        flex: 1;
+      }
+
+      button {
+        flex: 0 0 auto;
       }
     }
   </style>
@@ -197,26 +261,25 @@
 
   <div class="main">
     <div class="header">
-      <button class="hamburger" onclick="toggleHamburger()">☰</button>
-      <span>AI Code Assistant</span>
-      <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
-
-      <div class="hamburger-menu" id="hamburgerMenu">
+      <span>🤖 AI Code Learning Assistant</span>
+      <button class="hamburger-btn" onclick="toggleHamburger()">☰</button>
+      <div class="hamburger-menu">
         <button onclick="startNewChat()">+ New Chat</button>
       </div>
+      <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
     </div>
 
     <div id="chat" class="messages"></div>
 
-    <div class="input-container">
+    <div class="input-section">
       <select id="mode">
         <option value="lesson">📚 Mini Lesson</option>
         <option value="bugfix">🐛 Bug Fix</option>
         <option value="quiz">🧠 Quiz</option>
         <option value="general">💡 General</option>
       </select>
-      <textarea id="prompt" rows="1" placeholder="Ask anything... (Shift+Enter = new line)"></textarea>
-      <button class="send-btn" onclick="askBot()">Send</button>
+      <textarea id="prompt" placeholder="Ask anything..." rows="1"></textarea>
+      <button onclick="askBot()">Send</button>
     </div>
   </div>
 
@@ -225,20 +288,26 @@
       document.body.classList.toggle("dark");
     }
 
-    function toggleHamburger() {
-      const menu = document.getElementById("hamburgerMenu");
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
-    }
-
     function startNewChat() {
       document.getElementById("chat").innerHTML = "";
-      document.getElementById("hamburgerMenu").style.display = "none";
+    }
+
+    function toggleHamburger() {
+      document.querySelector(".header").classList.toggle("hamburger-open");
     }
 
     function formatResponse(text) {
       return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
         const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return `<pre><code>${escaped}</code></pre>`;
+        return `<pre><button class="copy-btn" onclick="copyCode(this)">📋</button><code>${escaped}</code></pre>`;
+      });
+    }
+
+    function copyCode(btn) {
+      const code = btn.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.innerText = "✅";
+        setTimeout(() => btn.innerText = "📋", 2000);
       });
     }
 
@@ -258,6 +327,7 @@
       botMsg.className = "message bot";
       botMsg.innerHTML = `<em>Thinking...</em>`;
       chat.appendChild(botMsg);
+
       chat.scrollTop = chat.scrollHeight;
       input.value = "";
 
@@ -276,14 +346,7 @@
       }
     }
 
-    // Handle Enter and Shift+Enter
-    const promptEl = document.getElementById("prompt");
-    promptEl.addEventListener("input", function () {
-      this.style.height = "auto";
-      this.style.height = this.scrollHeight + "px";
-    });
-
-    promptEl.addEventListener("keydown", function (e) {
+    document.getElementById("prompt").addEventListener("keydown", function(e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         askBot();
