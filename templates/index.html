@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Code Learning Assistant</title>
+  <title>💬 AI Code Learning Assistant</title>
   <style>
     :root {
       --bg-color: #f7f9fc;
       --text-color: #333;
-      --user-bg: #e0f7fa;
-      --bot-bg: #e3f2fd;
-      --user-text: #006064;
-      --bot-text: #0d47a1;
+      --user-bg: #dcf8c6;
+      --bot-bg: #f1f0f0;
+      --user-text: #000;
+      --bot-text: #000;
     }
 
     body.dark {
       --bg-color: #1e1e1e;
       --text-color: #eee;
       --user-bg: #004d40;
-      --bot-bg: #263238;
+      --bot-bg: #2e2e2e;
       --user-text: #b2dfdb;
-      --bot-text: #81d4fa;
+      --bot-text: #d1f0ff;
     }
 
     body {
@@ -29,76 +29,45 @@
       background: var(--bg-color);
       color: var(--text-color);
       display: flex;
+      flex-direction: column;
       height: 100vh;
-      overflow: hidden;
       transition: background 0.3s, color 0.3s;
     }
 
-    .sidebar {
-      width: 220px;
-      background-color: #fff;
-      border-right: 1px solid #ddd;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .sidebar h3 {
-      font-size: 18px;
-      margin-bottom: 12px;
-    }
-
-    .history-item {
-      padding: 8px 10px;
-      margin-bottom: 6px;
-      border-radius: 6px;
-      background: #f1f1f1;
-      cursor: pointer;
-    }
-
-    .history-item:hover {
-      background-color: #ddd;
-    }
-
-    .main {
+    .chat-container {
       flex: 1;
       display: flex;
       flex-direction: column;
+      max-width: 800px;
+      width: 100%;
+      margin: auto;
+      background: white;
+      border-left: 1px solid #ddd;
+      border-right: 1px solid #ddd;
     }
 
     .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 20px;
+      padding: 16px;
       background: #007acc;
       color: white;
-    }
-
-    .header .avatar {
       display: flex;
+      justify-content: space-between;
       align-items: center;
     }
 
-    .header img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-
-    .chat-box {
+    .messages {
       flex: 1;
-      padding: 16px;
       overflow-y: auto;
+      padding: 16px;
       background: var(--bg-color);
     }
 
     .message {
-      margin: 10px 0;
+      margin: 12px 0;
       padding: 12px 16px;
-      border-radius: 12px;
-      max-width: 80%;
-      animation: fadeIn 0.3s ease;
+      border-radius: 18px;
+      max-width: 85%;
+      word-wrap: break-word;
       white-space: pre-wrap;
       line-height: 1.5;
     }
@@ -113,27 +82,24 @@
       align-self: flex-start;
       background: var(--bot-bg);
       color: var(--bot-text);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
+      position: relative;
     }
 
     .input-section {
-      padding: 12px 16px;
       display: flex;
       gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #ccc;
       background: var(--bg-color);
-      border-top: 1px solid #ddd;
+      flex-wrap: wrap;
     }
 
     input[type="text"], select {
       flex: 1;
       padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
       border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
     }
 
     button {
@@ -146,40 +112,65 @@
       cursor: pointer;
     }
 
-    .toggle-btn {
-      background: none;
-      border: 1px solid white;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
+    button:hover {
+      background: #218838;
     }
 
-    @media (max-width: 768px) {
-      .sidebar {
-        display: none;
+    pre {
+      background: #0001;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: monospace;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border: none;
+      background: #ccc;
+      border-radius: 4px;
+    }
+
+    .dark pre {
+      background: #0004;
+    }
+
+    .toggle-btn {
+      background: none;
+      color: white;
+      border: 1px solid white;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .chat-container {
+        border-radius: 0;
+      }
+
+      .input-section {
+        flex-direction: column;
       }
     }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h3>Chat History</h3>
-    <div class="history-item">Welcome message</div>
-    <div class="history-item">Bug Fix session</div>
-    <div class="history-item">Lesson on loops</div>
-  </div>
-
-  <div class="main">
+  <div class="chat-container">
     <div class="header">
-      <div class="avatar">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/OpenAI_Logo.svg/512px-OpenAI_Logo.svg.png" alt="Bot Logo">
-        <strong>AI Code Assistant</strong>
-      </div>
-      <button class="toggle-btn" onclick="document.body.classList.toggle('dark')">🌙</button>
+      <span>💬 AI Code Learning Assistant</span>
+      <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
     </div>
 
-    <div id="chat" class="chat-box"></div>
+    <div id="chat" class="messages"></div>
 
     <div class="input-section">
       <select id="mode">
@@ -188,30 +179,55 @@
         <option value="quiz">🧠 Quiz</option>
         <option value="general">💡 General</option>
       </select>
-      <input type="text" id="prompt" placeholder="Ask your coding question...">
+      <input type="text" id="prompt" placeholder="Ask anything...">
       <button onclick="askBot()">Send</button>
     </div>
   </div>
 
   <script>
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
+
+    function formatResponse(text) {
+      return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `
+          <pre><button class="copy-btn" onclick="copyCode(this)">📋</button><code>${escaped}</code></pre>
+        `;
+      });
+    }
+
+    function copyCode(btn) {
+      const code = btn.nextElementSibling.innerText;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          btn.innerText = "✅";
+          setTimeout(() => btn.innerText = "📋", 2000);
+        });
+      }
+    }
+
     async function askBot() {
-      const prompt = document.getElementById("prompt").value.trim();
+      const input = document.getElementById("prompt");
+      const chat = document.getElementById("chat");
       const mode = document.getElementById("mode").value;
+      const prompt = input.value.trim();
       if (!prompt) return;
 
-      const chat = document.getElementById("chat");
-
+      // Show user message
       const userMsg = document.createElement("div");
       userMsg.className = "message user";
-      userMsg.textContent = prompt;
+      userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
       chat.appendChild(userMsg);
-      chat.scrollTop = chat.scrollHeight;
 
+      // Bot placeholder
       const botMsg = document.createElement("div");
       botMsg.className = "message bot";
-      botMsg.textContent = "🤖 Thinking...";
+      botMsg.innerHTML = `<em>Thinking...</em>`;
       chat.appendChild(botMsg);
       chat.scrollTop = chat.scrollHeight;
+      input.value = "";
 
       try {
         const res = await fetch("/ask", {
@@ -221,12 +237,11 @@
         });
 
         const data = await res.json();
-        botMsg.textContent = data.reply;
-      } catch (e) {
-        botMsg.textContent = "❌ Error reaching the server.";
+        botMsg.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
+        chat.scrollTop = chat.scrollHeight;
+      } catch (err) {
+        botMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
       }
-
-      document.getElementById("prompt").value = "";
     }
   </script>
 </body>
