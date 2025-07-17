@@ -8,19 +8,19 @@
     :root {
       --bg-color: #f7f9fc;
       --text-color: #333;
-      --user-bg: #e0f7fa;
-      --bot-bg: #e3f2fd;
-      --user-text: #006064;
-      --bot-text: #0d47a1;
+      --user-bg: #dcf8c6;
+      --bot-bg: #f1f0f0;
+      --user-text: #000;
+      --bot-text: #000;
     }
 
     body.dark {
       --bg-color: #1e1e1e;
       --text-color: #eee;
       --user-bg: #004d40;
-      --bot-bg: #263238;
+      --bot-bg: #2e2e2e;
       --user-text: #b2dfdb;
-      --bot-text: #81d4fa;
+      --bot-text: #d1f0ff;
     }
 
     body {
@@ -29,30 +29,27 @@
       background: var(--bg-color);
       color: var(--text-color);
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column;
       height: 100vh;
       transition: background 0.3s, color 0.3s;
     }
 
     .chat-container {
-      width: 100%;
-      max-width: 700px;
-      height: 90vh;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      max-width: 800px;
+      width: 100%;
+      margin: auto;
+      background: white;
+      border-left: 1px solid #ddd;
+      border-right: 1px solid #ddd;
     }
 
     .header {
-      padding: 16px 24px;
+      padding: 16px;
       background: #007acc;
       color: white;
-      font-weight: bold;
-      font-size: 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -62,16 +59,17 @@
       flex: 1;
       overflow-y: auto;
       padding: 16px;
+      background: var(--bg-color);
     }
 
     .message {
       margin: 12px 0;
       padding: 12px 16px;
-      border-radius: 16px;
+      border-radius: 18px;
       max-width: 85%;
-      line-height: 1.5;
       word-wrap: break-word;
       white-space: pre-wrap;
+      line-height: 1.5;
     }
 
     .user {
@@ -84,15 +82,16 @@
       align-self: flex-start;
       background: var(--bot-bg);
       color: var(--bot-text);
+      position: relative;
     }
 
     .input-section {
       display: flex;
-      padding: 12px 16px;
-      border-top: 1px solid #eee;
       gap: 8px;
-      flex-wrap: wrap;
+      padding: 12px;
+      border-top: 1px solid #ccc;
       background: var(--bg-color);
+      flex-wrap: wrap;
     }
 
     input[type="text"], select {
@@ -118,15 +117,29 @@
     }
 
     pre {
-      background: #00000011;
+      background: #0001;
       padding: 10px;
-      overflow-x: auto;
       border-radius: 8px;
+      overflow-x: auto;
       font-family: monospace;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border: none;
+      background: #ccc;
+      border-radius: 4px;
     }
 
     .dark pre {
-      background: #00000033;
+      background: #0004;
     }
 
     .toggle-btn {
@@ -139,19 +152,8 @@
       font-size: 14px;
     }
 
-    .suggestion {
-      cursor: pointer;
-      color: #007acc;
-      margin-right: 10px;
-    }
-
-    .suggestion:hover {
-      text-decoration: underline;
-    }
-
     @media (max-width: 600px) {
       .chat-container {
-        height: 100vh;
         border-radius: 0;
       }
 
@@ -177,16 +179,8 @@
         <option value="quiz">🧠 Quiz</option>
         <option value="general">💡 General</option>
       </select>
-      <input type="text" id="prompt" placeholder="Ask about Python, HTML, bugs, quizzes...">
+      <input type="text" id="prompt" placeholder="Ask anything...">
       <button onclick="askBot()">Send</button>
-    </div>
-
-    <div style="padding: 8px 16px; font-size: 14px;">
-      <strong>💡 Try:</strong>
-      <span class="suggestion" onclick="quickPrompt('Explain a Python function')">Python function</span> |
-      <span class="suggestion" onclick="quickPrompt('Fix this HTML form bug')">Fix HTML bug</span> |
-      <span class="suggestion" onclick="quickPrompt('Give me a JavaScript quiz')">JS quiz</span> |
-      <span class="suggestion" onclick="quickPrompt('What does this C++ error mean?')">C++ error</span>
     </div>
   </div>
 
@@ -195,155 +189,60 @@
       document.body.classList.toggle("dark");
     }
 
-    function quickPrompt(text) {
-      document.getElementById("prompt").value = text;
+    function formatResponse(text) {
+      return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `
+          <pre><button class="copy-btn" onclick="copyCode(this)">📋</button><code>${escaped}</code></pre>
+        `;
+      });
     }
 
-    function formatResponse(text) {
-  // Replace code blocks with styled <pre> elements and copy buttons
-  return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return `
-      <div style="position: relative; margin-top: 8px;">
-        <button onclick="copyCode(this)" style="
-          position:absolute;
-          top:8px;
-          right:8px;
-          font-size:12px;
-          cursor:pointer;
-          padding: 4px 8px;
-          z-index: 2;
-        ">📋 Copy</button>
-        <pre style="padding-top: 36px;"><code>${escapedCode}</code></pre>
-      </div>
-    `;
-  });
+    function copyCode(btn) {
+      const code = btn.nextElementSibling.innerText;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          btn.innerText = "✅";
+          setTimeout(() => btn.innerText = "📋", 2000);
+        });
+      }
+    }
 
-  // Wrap the full message in a container with copy-all
-  return `
-    <div style="position: relative; display: inline-block; width: 100%;">
-      <button onclick="copyEntireReply('${replyId}')" style="
-        position:absolute;
-        top:8px;
-        right:8px;
-        font-size:12px;
-        cursor:pointer;
-        padding: 4px 8px;
-        z-index: 2;
-      ">📋 Copy All</button>
-  <div style="position: relative; display: inline-block; width: 100%;">
-    <button onclick="copyCode(this)" style="
-      position:absolute;
-      top:8px;
-      right:8px;
-      font-size:12px;
-      cursor:pointer;
-      padding: 4px 8px;
-      z-index: 2;
-    ">📋 Copy</button>
-    <pre style="margin-top: 28px;"><code>${escaped}</code></pre>
-  </div>
-`;
+    async function askBot() {
+      const input = document.getElementById("prompt");
+      const chat = document.getElementById("chat");
+      const mode = document.getElementById("mode").value;
+      const prompt = input.value.trim();
+      if (!prompt) return;
 
-}
+      // Show user message
+      const userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
+      chat.appendChild(userMsg);
 
-function copyCode(btn) {
-  const code = btn.nextElementSibling.textContent;
+      // Bot placeholder
+      const botMsg = document.createElement("div");
+      botMsg.className = "message bot";
+      botMsg.innerHTML = `<em>Thinking...</em>`;
+      chat.appendChild(botMsg);
+      chat.scrollTop = chat.scrollHeight;
+      input.value = "";
 
-  // Modern clipboard API
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(code).then(() => {
-      btn.textContent = "✅ Copied!";
-      setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
-    }).catch(() => fallbackCopy(code, btn));
-  } else {
-    // Fallback for older or mobile browsers
-    fallbackCopy(code, btn);
-  }
-}
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, mode })
+        });
 
-function fallbackCopy(text, btn) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";  // avoid scroll jump
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-
-  try {
-    document.execCommand('copy');
-    btn.textContent = "✅ Copied!";
-  } catch (err) {
-    btn.textContent = "❌ Failed";
-  }
-
-  document.body.removeChild(textarea);
-  setTimeout(() => (btn.textContent = "📋 Copy"), 2000);
-}
-
-
-function copyEntireReply(replyId) {
-  const el = document.getElementById(replyId);
-  if (!el) return;
-
-  const text = el.innerText.replace("📄 Copy All", ""); // avoid copying the button label
-  navigator.clipboard.writeText(text).then(() => {
-    alert("✅ Full reply copied!");
-  });
-}
-
-let replyCounter = 0;
-
-async function askBot() {
-  const input = document.getElementById("prompt");
-  const chat = document.getElementById("chat");
-  const mode = document.getElementById("mode").value;
-  const prompt = input.value.trim();
-  if (!prompt) return;
-
-  const userMsg = document.createElement("div");
-  userMsg.className = "message user";
-  userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
-  chat.appendChild(userMsg);
-
-  const botMsg = document.createElement("div");
-  botMsg.className = "message bot";
-  botMsg.id = "loading-msg";
-  botMsg.innerHTML = `<em>Bot is thinking...</em>`;
-  chat.appendChild(botMsg);
-  chat.scrollTop = chat.scrollHeight;
-
-  input.value = "";
-
-  try {
-    const res = await fetch("/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, mode })
-    });
-
-    const data = await res.json();
-
-    const loadingMsg = document.getElementById("loading-msg");
-    if (loadingMsg) loadingMsg.remove();
-
-    const reply = document.createElement("div");
-    reply.className = "message bot";
-    reply.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
-    chat.appendChild(reply);
-    chat.scrollTop = chat.scrollHeight;
-  } catch (error) {
-    const loadingMsg = document.getElementById("loading-msg");
-    if (loadingMsg) loadingMsg.remove();
-
-    const errorMsg = document.createElement("div");
-    errorMsg.className = "message bot";
-    errorMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
-    chat.appendChild(errorMsg);
-  }
-}
-
+        const data = await res.json();
+        botMsg.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
+        chat.scrollTop = chat.scrollHeight;
+      } catch (err) {
+        botMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
+      }
+    }
   </script>
 </body>
 </html>
