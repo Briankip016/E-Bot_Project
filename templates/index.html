@@ -30,7 +30,7 @@
       color: var(--text-color);
       display: flex;
       height: 100vh;
-      transition: background 0.3s, color 0.3s;
+      overflow: hidden;
     }
 
     .sidebar {
@@ -40,6 +40,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s ease;
     }
 
     .sidebar h2 {
@@ -83,6 +84,7 @@
       overflow-y: auto;
       padding: 16px;
       background: var(--bg-color);
+      transition: all 0.3s ease;
     }
 
     .message {
@@ -93,6 +95,7 @@
       word-wrap: break-word;
       white-space: pre-wrap;
       line-height: 1.5;
+      transition: all 0.3s ease;
     }
 
     .user {
@@ -149,6 +152,7 @@
       position: absolute;
       bottom: 4px;
       right: 4px;
+      cursor: pointer;
     }
 
     pre {
@@ -188,22 +192,36 @@
     }
 
     @media (max-width: 800px) {
-      body {
-        flex-direction: column;
-      }
-
       .sidebar {
-        width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -260px;
+        z-index: 10;
+        width: 250px;
+        transform: translateX(-100%);
+        background: #0d1117;
       }
 
-      .main {
-        width: 100%;
+      .sidebar.open {
+        transform: translateX(0);
+        left: 0;
       }
-    }
 
-    @media (max-width: 600px) {
+      .toggle-sidebar {
+        display: block;
+        background: #007acc;
+        color: white;
+        padding: 10px;
+        font-size: 20px;
+        cursor: pointer;
+        border: none;
+      }
+
+      .header {
+        justify-content: space-between;
+      }
+
       .input-section {
         flex-direction: column;
         gap: 10px;
@@ -213,117 +231,118 @@
         width: 100%;
         box-sizing: border-box;
       }
+
+      .edit-btn {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
     }
   </style>
 </head>
-<body>
-  <div class="sidebar">
-    <h2>💬 Chat History</h2>
-    <button onclick="startNewChat()">+ New Chat</button>
-  </div>
 
+<body>
+  <!-- existing HTML content -->
+
+  <!-- Main Chat Area -->
   <div class="main">
     <div class="header">
-      <span>🤖 AI Code Learning Assistant</span>
-      <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
+      <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+      <h1>AI Code Assistant</h1>
+      <button class="toggle-btn" onclick="toggleDarkMode()">🌙</button>
     </div>
-
-    <div id="chat" class="messages"></div>
-
+    <div class="messages" id="chatContainer"></div>
     <div class="input-section">
-      <select id="mode">
-        <option value="lesson">📚 Mini Lesson</option>
-        <option value="bugfix">🐛 Bug Fix</option>
-        <option value="quiz">🧠 Quiz</option>
-        <option value="general">💡 General</option>
-      </select>
-      <input type="text" id="prompt" placeholder="Ask anything..." />
-      <button onclick="askBot()">Send</button>
+      <input type="text" id="userInput" placeholder="Type your question..." />
+      <button onclick="askBot()" id="sendBtn">Send</button>
     </div>
   </div>
 
   <script>
-    function toggleTheme() {
+    let editingIndex = null;
+
+    function toggleSidebar() {
+      document.querySelector(".sidebar").classList.toggle("open");
+    }
+
+    function toggleDarkMode() {
       document.body.classList.toggle("dark");
     }
 
-    function startNewChat() {
-      document.getElementById("chat").innerHTML = "";
+    function askBot() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chat = document.getElementById("chatContainer");
+
+      if (editingIndex !== null) {
+        const oldMessage = chat.children[editingIndex];
+        oldMessage.querySelector("p").innerText = text;
+        editingIndex = null;
+      } else {
+        const userDiv = document.createElement("div");
+        userDiv.className = "message user";
+        userDiv.innerHTML = `<p>${text}</p><button class="edit-btn" onclick="editMessage(this)">Edit</button>`;
+        chat.appendChild(userDiv);
+      }
+
+      input.value = "";
+      scrollToBottom();
+
+      fetch("https://e-bot-project-2.onrender.com/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: text }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const botDiv = document.createElement("div");
+          botDiv.className = "message bot";
+
+          if (data && data.response) {
+            const isCode = data.response.includes("```");
+            if (isCode) {
+              const parts = data.response.split("```");
+              botDiv.innerHTML = `<p>${parts[0]}</p><pre>${parts[1].replace(/(python|js|javascript)?/, "").trim()}<button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>`;
+            } else {
+              botDiv.innerHTML = `<p>${data.response}</p>`;
+            }
+          } else {
+            botDiv.innerHTML = `<p>⚠️ Error: No response from bot.</p>`;
+          }
+
+          chat.appendChild(botDiv);
+          scrollToBottom();
+        })
+        .catch(() => {
+          const errorDiv = document.createElement("div");
+          errorDiv.className = "message bot";
+          errorDiv.innerHTML = `<p>⚠️ Error reaching server.</p>`;
+          chat.appendChild(errorDiv);
+          scrollToBottom();
+        });
     }
 
-    function formatResponse(text) {
-      return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return `
-          <pre><button class="copy-btn" onclick="copyCode(this)">📋</button><code>${escaped}</code></pre>
-        `;
-      });
+    function editMessage(button) {
+      const msg = button.parentElement.querySelector("p").innerText;
+      const messages = Array.from(document.getElementById("chatContainer").children);
+      editingIndex = messages.indexOf(button.parentElement);
+      const input = document.getElementById("userInput");
+      input.value = msg;
+      input.focus();
+      input.setSelectionRange(msg.length, msg.length); // move cursor to end
     }
 
     function copyCode(btn) {
-      const code = btn.nextElementSibling.innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        btn.innerText = "✅";
-        setTimeout(() => btn.innerText = "📋", 2000);
-      });
+      const code = btn.parentElement.innerText.replace("Copy", "").trim();
+      navigator.clipboard.writeText(code);
+      btn.innerText = "Copied!";
+      setTimeout(() => (btn.innerText = "Copy"), 1000);
     }
 
-    function makeEditable(msgDiv, originalText) {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.className = "edit-input";
-      input.value = originalText;
-      msgDiv.innerHTML = "";
-      msgDiv.appendChild(input);
-      input.focus();
-
-      input.onblur = () => {
-        msgDiv.innerHTML = `<strong>You:</strong> ${input.value}`;
-        addEditButton(msgDiv, input.value);
-      };
-    }
-
-    function addEditButton(msgDiv, text) {
-      const editBtn = document.createElement("button");
-      editBtn.className = "edit-btn";
-      editBtn.textContent = "✏️ Edit";
-      editBtn.onclick = () => makeEditable(msgDiv, text);
-      msgDiv.appendChild(editBtn);
-    }
-
-    async function askBot() {
-      const input = document.getElementById("prompt");
-      const chat = document.getElementById("chat");
-      const mode = document.getElementById("mode").value;
-      const prompt = input.value.trim();
-      if (!prompt) return;
-
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user";
-      userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
-      addEditButton(userMsg, prompt);
-      chat.appendChild(userMsg);
-
-      const botMsg = document.createElement("div");
-      botMsg.className = "message bot";
-      botMsg.innerHTML = `<em>Thinking...</em>`;
-      chat.appendChild(botMsg);
+    function scrollToBottom() {
+      const chat = document.getElementById("chatContainer");
       chat.scrollTop = chat.scrollHeight;
-      input.value = "";
-
-      try {
-        const res = await fetch("/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, mode })
-        });
-
-        const data = await res.json();
-        botMsg.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
-        chat.scrollTop = chat.scrollHeight;
-      } catch (err) {
-        botMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
-      }
     }
   </script>
 </body>
