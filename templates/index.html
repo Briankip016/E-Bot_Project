@@ -432,86 +432,76 @@ body.dark .mode-dropdown div:hover {
   </div>
 </div>
 
+<script>
+  let currentMode = "lesson"; // default mode
 
-  <script>
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
-    }
+  function askBot() {
+    const userInput = document.getElementById("prompt").value.trim();
+    if (!userInput) return;
 
-    function startNewChat() {
-      document.getElementById("chat").innerHTML = '<div id="placeholder" class="placeholder">What’s on the agenda today?</div>';
-    }
+    const mode = currentMode;
 
-    function toggleHamburger() {
-      document.querySelector(".header").classList.toggle("hamburger-open");
-    }
+    // Add user message to chat
+    addMessage("user", userInput);
 
-    function formatResponse(text) {
-      return text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return `<pre><button class="copy-btn" onclick="copyCode(this)">📋</button><code>${escaped}</code></pre>`;
-      });
-    }
+    // Clear prompt box
+    document.getElementById("prompt").value = "";
 
-    function copyCode(btn) {
-      const code = btn.nextElementSibling.innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        btn.innerText = "✅";
-        setTimeout(() => btn.innerText = "📋", 2000);
-      });
-    }
+    // Scroll to bottom
+    setTimeout(() => {
+      const chatContainer = document.querySelector(".chat-container");
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }, 50);
 
-    async function askBot() {
-      const input = document.getElementById("prompt");
-      const chat = document.getElementById("chat");
-      const mode = document.getElementById("mode").value;
-      const prompt = input.value.trim();
-      if (!prompt) return;
-
-      const placeholder = document.getElementById("placeholder");
-      if (placeholder) placeholder.remove();
-
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user";
-      userMsg.innerHTML = `<strong>You:</strong> ${prompt}`;
-      chat.appendChild(userMsg);
-
-      const botMsg = document.createElement("div");
-      botMsg.className = "message bot";
-      botMsg.innerHTML = `<em>Thinking...</em>`;
-      chat.appendChild(botMsg);
-
-      chat.scrollTop = chat.scrollHeight;
-      input.value = "";
-
-      try {
-        const res = await fetch("/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, mode })
-        });
-
-        const data = await res.json();
-        botMsg.innerHTML = `<strong>Bot:</strong> ${formatResponse(data.reply)}`;
-        chat.scrollTop = chat.scrollHeight;
-      } catch (err) {
-        botMsg.innerHTML = `<strong>Bot:</strong> ❌ Error reaching server.`;
-      }
-    }
-
-    document.getElementById("prompt").addEventListener("keydown", function(e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        askBot();
-      }
+    fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: userInput, mode: mode })
+    })
+    .then(res => res.json())
+    .then(data => {
+      addMessage("bot", data.response);
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      addMessage("bot", "⚠️ Error reaching server.");
     });
+  }
 
-    document.getElementById("prompt").addEventListener("input", function () {
-  this.style.height = "auto";
-  this.style.height = this.scrollHeight + "px";
-});
+  function toggleDropdown() {
+    const dropdown = document.getElementById("modeDropdown");
+    dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+  }
 
+  function setMode(mode) {
+    currentMode = mode;
+    const labelMap = {
+      lesson: "📚",
+      bugfix: "🐛",
+      quiz: "🧠",
+      general: "💡"
+    };
+    document.getElementById("modeLabel").textContent = labelMap[mode];
+    document.getElementById("modeDropdown").style.display = "none";
+  }
 
-  </script>
+  // Close dropdown if clicked outside
+  document.addEventListener("click", function (e) {
+    const dropdown = document.getElementById("modeDropdown");
+    const wrapper = document.querySelector(".dropdown-wrapper");
+    if (!wrapper.contains(e.target)) {
+      dropdown.style.display = "none";
+    }
+  });
+
+  // Enable Enter key behavior
+  document.getElementById("prompt").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      askBot();
+    }
+  });
+</script>
+
 </body>
 </html>
