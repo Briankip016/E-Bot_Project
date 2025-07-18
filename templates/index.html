@@ -461,51 +461,6 @@ body.dark .mode-dropdown div:hover {
       });
     }
 
-    let selectedMode = 'lesson';
-
-function toggleDropdown() {
-  const dropdown = document.getElementById("modeDropdown");
-  dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
-}
-
-function setMode(mode) {
-  selectedMode = mode;
-  const labelMap = {
-    lesson: "Lesson",
-    bugfix: "Bug Fix",
-    quiz: "Quiz",
-    general: "General"
-  };
-  document.getElementById("modeLabel").textContent = labelMap[mode];
-  document.getElementById("modeDropdown").style.display = "none";
-}
-
-function askBot() {
-  const input = document.getElementById("prompt");
-  const prompt = input.value.trim();
-  if (!prompt) return;
-
-  // Send to backend
-  fetch("/ask", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, mode: selectedMode })
-  });
-
-  input.value = "";
-}
-
-// Auto close dropdown if clicking outside
-document.addEventListener("click", function (event) {
-  const dropdown = document.getElementById("modeDropdown");
-  const btn = document.querySelector(".tools-btn");
-
-  if (!dropdown.contains(event.target) && !btn.contains(event.target)) {
-    dropdown.style.display = "none";
-  }
-});
-
-
     async function askBot() {
       const input = document.getElementById("prompt");
       const chat = document.getElementById("chat");
