@@ -501,6 +501,20 @@ body.dark .mode-dropdown div:hover {
       askBot();
     }
   });
+
+  function addMessage(sender, text) {
+  const chatContainer = document.querySelector(".chat-container");
+
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `message ${sender}`;
+  messageDiv.innerHTML = `<div class="bubble">${text}</div>`;
+
+  chatContainer.appendChild(messageDiv);
+
+  // Scroll to bottom
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
 </script>
 
 </body>
