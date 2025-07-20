@@ -218,7 +218,6 @@
   </div>
 
   <script>
-  window.onload = function () {
     let selectedMode = "lesson";
 
     function toggleSidebar() {
@@ -248,34 +247,18 @@
     }
 
     function askBot() {
-  const promptEl = document.getElementById("prompt");
-  const question = promptEl.value.trim();
-  if (!question) return;
+      const promptEl = document.getElementById("prompt");
+      const question = promptEl.value.trim();
+      if (!question) return;
 
-  addMessage("user", question);
-  promptEl.value = "";
-  adjustTextareaHeight(promptEl);
+      addMessage("user", question);
+      promptEl.value = "";
+      adjustTextareaHeight(promptEl);
 
-  fetch("http://localhost:5000/ask", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      prompt: question,
-      mode: selectedMode
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    addMessage("bot", data.reply);
-  })
-  .catch(error => {
-    console.error("Error:", error);
-    addMessage("bot", "❌ Failed to connect to AI. Please try again.");
-  });
-}
-
+      setTimeout(() => {
+        addMessage("bot", `Response to "${question}" in ${selectedMode} mode`);
+      }, 1000);
+    }
 
     function addMessage(sender, text) {
       const chat = document.getElementById("chat-container");
@@ -317,7 +300,7 @@
       history.forEach(msg => addMessage(msg.sender, msg.text));
     }
 
-    loadHistory();
+    window.onload = loadHistory;
 
     // Close dropdown if clicking outside
     document.addEventListener("click", function (e) {
@@ -326,16 +309,6 @@
         dropdown.classList.remove("show");
       }
     });
-
-    // Attach global functions to window so button onclick works
-    window.toggleSidebar = toggleSidebar;
-    window.toggleTheme = toggleTheme;
-    window.toggleDropdown = toggleDropdown;
-    window.setMode = setMode;
-    window.askBot = askBot;
-    window.startNewChat = startNewChat;
-  };
-</script>
-
+  </script>
 </body>
 </html>
