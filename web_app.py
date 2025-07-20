@@ -29,11 +29,10 @@ def ask():
                 {"role": "user", "content": full_prompt}
             ]
         )
-        answer = response['choices'][0]['message']['content']
+        answer = response.choices[0].message.content  # ✅ correct usage
         return jsonify({"reply": answer.strip()})
     except Exception as e:
         return jsonify({"reply": f"❌ Error: {str(e)}"}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
