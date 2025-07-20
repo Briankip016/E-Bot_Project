@@ -4,13 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Code Assistant</title>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
   <style>
     :root {
       --bg-light: #ffffff;
-      --bg-dark: #121212;
+      --bg-dark: #1e1e1e;
       --text-light: #000000;
       --text-dark: #ffffff;
       --accent: #0b5ed7;
+      --bot-bg: #f1f1f1;
+      --user-bg: #d1e7dd;
+      --code-bg-light: #f5f5f5;
+      --code-bg-dark: #2d2d2d;
     }
 
     body {
@@ -24,6 +29,17 @@
     body.dark-mode {
       background: var(--bg-dark);
       color: var(--text-dark);
+    }
+
+    pre {
+      background-color: var(--code-bg-light);
+      padding: 10px;
+      overflow-x: auto;
+      border-radius: 5px;
+    }
+
+    body.dark-mode pre {
+      background-color: var(--code-bg-dark);
     }
 
     .header {
@@ -73,13 +89,15 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      align-items: center;
     }
 
     #chat-container {
+      width: 100%;
+      max-width: 800px;
       flex: 1;
       overflow-y: auto;
       padding: 20px;
-      position: relative;
     }
 
     #placeholder {
@@ -92,11 +110,19 @@
       border-top: 1px solid #ccc;
       padding: 10px;
       background: #fff;
+      width: 100%;
+    }
+
+    body.dark-mode .chat-input-container {
+      background: var(--bg-dark);
+      border-top: 1px solid #444;
     }
 
     .chat-input-inner {
       display: flex;
       align-items: flex-end;
+      max-width: 800px;
+      margin: auto;
     }
 
     textarea#prompt {
@@ -119,6 +145,44 @@
       padding: 12px;
       font-size: 1.2em;
       cursor: pointer;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    .message.user {
+      background: var(--user-bg);
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .message.bot {
+      background: var(--bot-bg);
+      align-self: flex-start;
+      margin-right: auto;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 0.9em;
+      padding: 2px 6px;
+      cursor: pointer;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+    }
+
+    body.dark-mode .copy-btn {
+      background: #0d6efd;
     }
 
     .dropdown {
@@ -150,61 +214,17 @@
       gap: 5px;
     }
 
-    .message {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 10px;
-      max-width: 80%;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .message.user {
-      background: #d1e7dd;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-
-    .message.bot {
-      background: #f8d7da;
-      align-self: flex-start;
-      margin-right: auto;
-      position: relative;
-    }
-
-    pre {
-      background: #333;
-      color: #f8f8f2;
-      padding: 10px;
-      border-radius: 8px;
-      overflow-x: auto;
-      position: relative;
-    }
-
-    pre code {
-      font-family: monospace;
-      white-space: pre-wrap;
-    }
-
-    .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #0b5ed7;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8em;
-    }
-
     @media (max-width: 768px) {
       .sidebar {
         position: absolute;
         z-index: 100;
         background: #f3f3f3;
         height: 100%;
+      }
+
+      .chat-input-inner {
+        flex-direction: column;
+        align-items: stretch;
       }
     }
   </style>
@@ -247,6 +267,8 @@
     </div>
   </div>
 
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
   <script>
     let selectedMode = "lesson";
 
@@ -258,8 +280,7 @@
       const body = document.body;
       body.classList.toggle("dark-mode");
       body.classList.toggle("light-mode");
-      const icon = document.getElementById("theme-toggle");
-      icon.textContent = body.classList.contains("dark-mode") ? "🌚" : "🌞";
+      document.getElementById("theme-toggle").textContent = body.classList.contains("dark-mode") ? "🌚" : "🌞";
     }
 
     function toggleDropdown() {
@@ -288,65 +309,41 @@
       try {
         const response = await fetch("/ask", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompt: question,
-            mode: selectedMode,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: question, mode: selectedMode }),
         });
-
-        if (!response.ok) throw new Error("Network response was not ok");
 
         const data = await response.json();
         addMessage("bot", data.reply);
       } catch (error) {
         console.error("Fetch error:", error);
-        addMessage("bot", "❌ Failed to connect to AI. Please check the server.");
+        addMessage("bot", "❌ Failed to connect to AI.");
       }
     }
 
-    function addMessage(sender, text) {
+    function addMessage(sender, rawText) {
       const chat = document.getElementById("chat-container");
       document.getElementById("placeholder")?.remove();
 
       const msg = document.createElement("div");
       msg.className = `message ${sender}`;
 
-      if (sender === "bot") {
-        const codeRegex = /```([\s\S]*?)```/g;
-        let parts = text.split(codeRegex);
-        parts.forEach((part, i) => {
-          if (i % 2 === 1) {
-            const pre = document.createElement("pre");
-            const code = document.createElement("code");
-            code.textContent = part.trim();
-            pre.appendChild(code);
+      let parsedText = rawText
+        .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+          const encoded = encodeURIComponent(code);
+          return `
+            <pre><code class="${lang || 'plaintext'}">${code}</code>
+              <button class="copy-btn" onclick="copyCode(decodeURIComponent('${encoded}'))">Copy</button>
+            </pre>`;
+        })
+        .replace(/\n/g, "<br>");
 
-            const copyBtn = document.createElement("button");
-            copyBtn.className = "copy-btn";
-            copyBtn.innerText = "Copy";
-            copyBtn.onclick = () => {
-              navigator.clipboard.writeText(part.trim());
-              copyBtn.innerText = "Copied!";
-              setTimeout(() => (copyBtn.innerText = "Copy"), 1500);
-            };
-            pre.appendChild(copyBtn);
-            msg.appendChild(pre);
-          } else {
-            const p = document.createElement("p");
-            p.textContent = part;
-            msg.appendChild(p);
-          }
-        });
-      } else {
-        msg.textContent = text;
-      }
-
+      msg.innerHTML = parsedText;
       chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
-      saveToHistory(sender, text);
+      hljs.highlightAll();
+
+      saveToHistory(sender, rawText);
     }
 
     function adjustTextareaHeight(el) {
@@ -354,10 +351,13 @@
       el.style.height = `${el.scrollHeight}px`;
     }
 
-    document.getElementById("prompt").addEventListener("input", (e) => {
-      adjustTextareaHeight(e.target);
-    });
+    function copyCode(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Copied!");
+      });
+    }
 
+    document.getElementById("prompt").addEventListener("input", (e) => adjustTextareaHeight(e.target));
     document.getElementById("prompt").addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
