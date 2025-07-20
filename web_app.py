@@ -13,37 +13,27 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def home():
     return render_template("index.html")
 
-@app.route("/ask", methods=["POST"])
+@app.route('/ask', methods=['POST'])
 def ask():
-    data = request.json
+    data = request.get_json()
     prompt = data.get("prompt", "")
-    mode = data.get("mode", "lesson")
+    mode = data.get("mode", "general")
 
-    if not prompt:
-        return jsonify({"reply": "❗ Please enter a question or code."})
-
-    current_year = datetime.now().year
-
-    # ✨ Mode-specific prompt instructions with date context
-    if mode == "bugfix":
-        prompt = f"As of {current_year}, this code has a bug:\n\n{prompt}\n\nPlease explain what's wrong and give a fixed version."
-    elif mode == "quiz":
-        prompt = f"As of {current_year}, create 3 multiple-choice questions with answers to test knowledge on: {prompt}"
-    elif mode == "lesson":
-        prompt = f"As of {current_year}, explain this topic in 3 clear sentences for a beginner: {prompt}"
+    full_prompt = f"[Mode: {mode}] {prompt}"
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f"You are an AI assistant in the year {current_year}."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": f"You are a helpful AI code assistant in {mode} mode."},
+                {"role": "user", "content": full_prompt}
             ]
         )
-        reply = response.choices[0].message.content
-        return jsonify({"reply": reply.strip()})
+        answer = response['choices'][0]['message']['content']
+        return jsonify({"reply": answer.strip()})
     except Exception as e:
-        return jsonify({"reply": f"❌ Error: {str(e)}"})
+        return jsonify({"reply": f"❌ Error: {str(e)}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

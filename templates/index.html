@@ -246,19 +246,38 @@
       document.getElementById("chat-container").innerHTML = '<div id="placeholder">What’s on the agenda today?</div>';
     }
 
-    function askBot() {
-      const promptEl = document.getElementById("prompt");
-      const question = promptEl.value.trim();
-      if (!question) return;
+    async function askBot() {
+    const promptEl = document.getElementById("prompt");
+    const question = promptEl.value.trim();
+    if (!question) return;
 
-      addMessage("user", question);
-      promptEl.value = "";
-      adjustTextareaHeight(promptEl);
+    addMessage("user", question);
+    promptEl.value = "";
+    adjustTextareaHeight(promptEl);
 
-      setTimeout(() => {
-        addMessage("bot", `Response to "${question}" in ${selectedMode} mode`);
-      }, 1000);
+    try {
+      const response = await fetch("/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: question,
+          mode: selectedMode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      addMessage("bot", data.reply);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      addMessage("bot", "❌ Failed to connect to AI. Please check the server.");
     }
+  }
 
     function addMessage(sender, text) {
       const chat = document.getElementById("chat-container");
