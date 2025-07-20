@@ -3,519 +3,312 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💬 AI Code Learning Assistant</title>
+  <title>AI Code Assistant</title>
   <style>
     :root {
-      --bg-color: #f7f9fc;
-      --text-color: #333;
-      --user-bg: #dcf8c6;
-      --bot-bg: #f1f0f0;
-      --user-text: #000;
-      --bot-text: #000;
-    }
-
-    body.dark {
-      --bg-color: #1e1e1e;
-      --text-color: #eee;
-      --user-bg: #004d40;
-      --bot-bg: #2e2e2e;
-      --user-text: #b2dfdb;
-      --bot-text: #d1f0ff;
+      --bg-light: #ffffff;
+      --bg-dark: #121212;
+      --text-light: #000000;
+      --text-dark: #ffffff;
+      --accent: #0b5ed7;
     }
 
     body {
       margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
+      font-family: sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
       transition: background 0.3s, color 0.3s;
-      flex-direction: row;
     }
 
-    .sidebar {
-      width: 250px;
-      background: #0d1117;
-      color: #fff;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .sidebar h2 {
-      font-size: 18px;
-      margin-bottom: 16px;
-    }
-
-    .sidebar button {
-      background: #161b22;
-      border: none;
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .sidebar button:hover {
-      background: #30363d;
-    }
-
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      max-width: 100%;
+    body.dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
     }
 
     .header {
-      padding: 12px 16px;
-      background: #007acc;
-      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: relative;
-    }
-
-    .header .center-title {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-weight: bold;
-    }
-
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      background: var(--bg-color);
-    }
-
-    .placeholder {
-      text-align: center;
-      color: #999;
-      margin-top: 20%;
-      font-size: 18px;
-    }
-
-    .message {
-      margin: 12px 0;
-      padding: 12px 16px;
-      border-radius: 18px;
-      max-width: 85%;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-
-    .user {
-      align-self: flex-end;
-      background: var(--user-bg);
-      color: var(--user-text);
-    }
-
-    .bot {
-      align-self: flex-start;
-      background: var(--bot-bg);
-      color: var(--bot-text);
-    }
-
-    .input-section {
-      display: flex;
-      padding: 12px;
-      border-top: 1px solid #ccc;
-      background: var(--bg-color);
-      align-items: flex-end;
-    }
-
-    select {
-      margin-right: 8px;
-      height: 40px;
-      border-radius: 6px;
-      padding: 6px;
-    }
-
-    textarea {
-      flex: 1;
-      resize: none;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      min-height: 40px;
-      max-height: 150px;
-      padding: 8px;
-      overflow-y: auto;
-      line-height: 1.4;
-    }
-
-    button {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-left: 8px;
-    }
-
-    button:hover {
-      background: #218838;
-    }
-
-    pre {
-      background: #0001;
       padding: 10px;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-family: monospace;
-      position: relative;
-      margin-top: 6px;
-    }
-
-    .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 12px;
-      padding: 4px 8px;
-      cursor: pointer;
-      border: none;
-      background: #ccc;
-      border-radius: 4px;
-    }
-
-    .dark pre {
-      background: #0004;
-    }
-
-    .toggle-btn {
-      background: none;
-      color: white;
-      border: 1px solid white;
-      border-radius: 6px;
-      padding: 4px 10px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .hamburger-btn {
-      background: none;
-      color: white;
-      font-size: 24px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .hamburger-menu {
-      display: none;
-      position: absolute;
-      top: 56px;
-      left: 10px;
-      background: #161b22;
-      padding: 10px;
-      border-radius: 6px;
-      z-index: 10;
-    }
-
-    .hamburger-menu button {
-      display: block;
+      background: #f3f3f3;
+      position: fixed;
       width: 100%;
-      margin: 4px 0;
+      top: 0;
+      z-index: 1000;
     }
 
-    .hamburger-open .hamburger-menu {
+    .bot-title {
+      margin: 0;
+      font-size: 1.2em;
+      text-align: center;
+      flex: 1;
+    }
+
+    #hamburger, #theme-toggle {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .container {
+      display: flex;
+      margin-top: 60px;
+      height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #e0e0e0;
+      padding: 10px;
+      display: none;
+    }
+
+    .sidebar.show {
       display: block;
+    }
+
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      position: relative;
+    }
+
+    #placeholder {
+      text-align: center;
+      opacity: 0.6;
+      margin-top: 30%;
     }
 
     .chat-input-container {
-  padding: 12px;
-  background: var(--bg-color);
-  border-top: 1px solid #ccc;
-}
+      border-top: 1px solid #ccc;
+      padding: 10px;
+      background: #fff;
+    }
 
-.chat-input-inner {
-  display: flex;
-  align-items: flex-end;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 24px;
-  padding: 8px 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  background: var(--bg-color);
-  transition: all 0.2s ease-in-out;
-  position: relative;
-}
+    .chat-input-inner {
+      display: flex;
+      align-items: flex-end;
+    }
 
-body.dark .chat-input-inner {
-  background: #2c2c2c;
-  border-color: #555;
-}
+    textarea#prompt {
+      flex: 1;
+      border-radius: 10px;
+      resize: none;
+      padding: 10px;
+      font-size: 1em;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      margin: 0 10px;
+    }
 
-.chat-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+    .send-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 12px;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
 
-.plus-btn {
-  background: #007acc;
-  color: white;
-  font-size: 18px;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    .dropdown {
+      position: relative;
+    }
 
-.chat-input-inner select {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 5px;
+      z-index: 10;
+    }
 
-.chat-input-inner textarea {
-  flex: 1;
-  resize: none;
-  border: none;
-  outline: none;
-  padding: 8px 10px;
-  font-size: 16px;
-  max-height: 150px;
-  background: transparent;
-  color: var(--text-color);
-  margin-left: 10px;
-  line-height: 1.4;
-}
+    .dropdown-menu button {
+      display: block;
+      background: none;
+      border: none;
+      font-size: 1.3em;
+      cursor: pointer;
+      padding: 5px;
+    }
 
-.send-btn {
-  background: #28a745;
-  border: none;
-  color: white;
-  padding: 10px 14px;
-  margin-left: 8px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-}
+    .dropdown.show .dropdown-menu {
+      display: flex;
+      gap: 5px;
+    }
 
-.send-btn:hover {
-  background: #218838;
-}
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
 
-.dropdown-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+    .message.user {
+      background: #d1e7dd;
+      align-self: flex-end;
+      margin-left: auto;
+    }
 
-.tools-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-}
+    .message.bot {
+      background: #f8d7da;
+      align-self: flex-start;
+      margin-right: auto;
+    }
 
-.mode-label {
-  font-size: 12px;
-  color: var(--text-color);
-}
-
-.mode-dropdown {
-  position: absolute;
-  bottom: 40px;
-  left: 0;
-  background: var(--bg-color);
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  display: none;
-  flex-direction: column;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  z-index: 999;
-  min-width: 120px;
-}
-
-.mode-dropdown div {
-  padding: 10px 12px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.mode-dropdown div:hover {
-  background: #eee;
-}
-
-body.dark .mode-dropdown div:hover {
-  background: #333;
-}
-
-
-    @media (max-width: 800px) {
-      body {
-        flex-direction: column;
-      }
-
+    @media (max-width: 768px) {
       .sidebar {
-        display: none;
-      }
-
-      .header {
-        justify-content: space-between;
-      }
-
-      .input-section {
-        flex-wrap: nowrap;
-        gap: 8px;
-      }
-
-      select {
-        flex: 0 0 auto;
-      }
-
-      textarea {
-        flex: 1;
-      }
-
-      button {
-        flex: 0 0 auto;
+        position: absolute;
+        z-index: 100;
+        background: #f3f3f3;
+        height: 100%;
       }
     }
   </style>
 </head>
-<body>
-  <div class="sidebar">
-    <h2>💬 Chat History</h2>
-    <button onclick="startNewChat()">+ New Chat</button>
+<body class="light-mode">
+  <div class="header">
+    <button id="hamburger" onclick="toggleSidebar()">☰</button>
+    <h1 class="bot-title">AI Code Assistant</h1>
+    <button id="theme-toggle" onclick="toggleTheme()">🌞</button>
   </div>
 
-  <div class="main">
-    <div class="header">
-      <button class="hamburger-btn" onclick="toggleHamburger()">☰</button>
-      <span class="center-title">🤖 AI Code Assistant</span>
-      <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
-      <div class="hamburger-menu">
-        <button onclick="startNewChat()">+ New Chat</button>
+  <div class="container">
+    <div class="sidebar" id="sidebar">
+      <button onclick="startNewChat()">+ New Chat</button>
+      <div id="chat-history"></div>
+    </div>
+
+    <div class="chat-section">
+      <div id="chat-container">
+        <div id="placeholder">What’s on the agenda today?</div>
       </div>
-    </div>
 
-    <div id="chat" class="messages">
-      <div id="placeholder" class="placeholder">What’s on the agenda today?</div>
-    </div>
-
-<div class="chat-input-container">
-  <div class="chat-input-inner">
-    <div class="chat-left">
-      <div class="dropdown-wrapper">
-        <button onclick="toggleDropdown()" class="tools-btn" title="Select Mode">🛠</button>
-        <span id="modeLabel" class="mode-label">Lesson</span> <!-- Optional label -->
-        <div id="modeDropdown" class="mode-dropdown">
-          <div onclick="setMode('lesson')">📚 Mini Lesson</div>
-          <div onclick="setMode('bugfix')">🐛 Bug Fix</div>
-          <div onclick="setMode('quiz')">🧠 Quiz</div>
-          <div onclick="setMode('general')">💡 General</div>
+      <div class="chat-input-container">
+        <div class="chat-input-inner">
+          <div class="chat-left">
+            <div class="dropdown" id="dropdown">
+              <button onclick="toggleDropdown()" class="plus-btn">➕</button>
+              <div class="dropdown-menu" id="modeDropdown">
+                <button onclick="setMode('lesson')">📚</button>
+                <button onclick="setMode('bugfix')">🐛</button>
+                <button onclick="setMode('quiz')">🧠</button>
+                <button onclick="setMode('general')">💡</button>
+              </div>
+            </div>
+          </div>
+          <textarea id="prompt" placeholder="Ask something..." rows="1"></textarea>
+          <button onclick="askBot()" class="send-btn">➤</button>
         </div>
       </div>
     </div>
-    <textarea id="prompt" placeholder="Ask something..." rows="1"></textarea>
-    <button onclick="askBot()" class="send-btn">➤</button>
   </div>
-</div>
 
-<script>
-  let currentMode = "lesson"; // default mode
+  <script>
+    let selectedMode = "lesson";
 
-  function askBot() {
-    const userInput = document.getElementById("prompt").value.trim();
-    if (!userInput) return;
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("show");
+    }
 
-    const mode = currentMode;
+    function toggleTheme() {
+      const body = document.body;
+      body.classList.toggle("dark-mode");
+      body.classList.toggle("light-mode");
+      const icon = document.getElementById("theme-toggle");
+      icon.textContent = body.classList.contains("dark-mode") ? "🌚" : "🌞";
+    }
 
-    // Add user message to chat
-    addMessage("user", userInput);
+    function toggleDropdown() {
+      document.getElementById("dropdown").classList.toggle("show");
+    }
 
-    // Clear prompt box
-    document.getElementById("prompt").value = "";
+    function setMode(mode) {
+      selectedMode = mode;
+      toggleDropdown();
+    }
 
-    // Scroll to bottom
-    setTimeout(() => {
-      const chatContainer = document.querySelector(".chat-container");
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }, 50);
+    function startNewChat() {
+      localStorage.clear();
+      document.getElementById("chat-container").innerHTML = '<div id="placeholder">What’s on the agenda today?</div>';
+    }
 
-    fetch("/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: userInput, mode: mode })
-    })
-    .then(res => res.json())
-    .then(data => {
-      addMessage("bot", data.response);
-    })
-    .catch(err => {
-      console.error("Error:", err);
-      addMessage("bot", "⚠️ Error reaching server.");
+    function askBot() {
+      const promptEl = document.getElementById("prompt");
+      const question = promptEl.value.trim();
+      if (!question) return;
+
+      addMessage("user", question);
+      promptEl.value = "";
+      adjustTextareaHeight(promptEl);
+
+      setTimeout(() => {
+        addMessage("bot", `Response to "${question}" in ${selectedMode} mode`);
+      }, 1000);
+    }
+
+    function addMessage(sender, text) {
+      const chat = document.getElementById("chat-container");
+      document.getElementById("placeholder")?.remove();
+
+      const msg = document.createElement("div");
+      msg.className = `message ${sender}`;
+      msg.textContent = text;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+
+      saveToHistory(sender, text);
+    }
+
+    function adjustTextareaHeight(el) {
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    }
+
+    document.getElementById("prompt").addEventListener("input", (e) => {
+      adjustTextareaHeight(e.target);
     });
-  }
 
-  function toggleDropdown() {
-    const dropdown = document.getElementById("modeDropdown");
-    dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
-  }
+    document.getElementById("prompt").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        askBot();
+      }
+    });
 
-  function setMode(mode) {
-    currentMode = mode;
-    const labelMap = {
-      lesson: "📚",
-      bugfix: "🐛",
-      quiz: "🧠",
-      general: "💡"
-    };
-    document.getElementById("modeLabel").textContent = labelMap[mode];
-    document.getElementById("modeDropdown").style.display = "none";
-  }
-
-  // Close dropdown if clicked outside
-  document.addEventListener("click", function (e) {
-    const dropdown = document.getElementById("modeDropdown");
-    const wrapper = document.querySelector(".dropdown-wrapper");
-    if (!wrapper.contains(e.target)) {
-      dropdown.style.display = "none";
+    function saveToHistory(sender, text) {
+      let history = JSON.parse(localStorage.getItem("chatHistory")) || [];
+      history.push({ sender, text });
+      localStorage.setItem("chatHistory", JSON.stringify(history));
     }
-  });
 
-  // Enable Enter key behavior
-  document.getElementById("prompt").addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      askBot();
+    function loadHistory() {
+      const history = JSON.parse(localStorage.getItem("chatHistory")) || [];
+      history.forEach(msg => addMessage(msg.sender, msg.text));
     }
-  });
 
-  function addMessage(sender, text) {
-  const chatContainer = document.querySelector(".chat-container");
+    window.onload = loadHistory;
 
-  const messageDiv = document.createElement("div");
-  messageDiv.className = `message ${sender}`;
-  messageDiv.innerHTML = `<div class="bubble">${text}</div>`;
-
-  chatContainer.appendChild(messageDiv);
-
-  // Scroll to bottom
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-</script>
-
+    // Close dropdown if clicking outside
+    document.addEventListener("click", function (e) {
+      const dropdown = document.getElementById("dropdown");
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove("show");
+      }
+    });
+  </script>
 </body>
 </html>
