@@ -4,16 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Code Assistant</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-theme">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css" id="hljs-theme">
   <style>
-    /* -- Colors & Fonts */
     :root {
       --bg-light: #ffffff;
-      --bg-dark: #121212;
+      --bg-dark: #1e1e1e;
       --text-light: #000000;
       --text-dark: #ffffff;
       --accent: #0b5ed7;
+      --bot-bg-light: #f1f1f1;
+      --bot-bg-dark: #333;
+      --user-bg-light: #d1e7dd;
+      --user-bg-dark: #005f4b;
+      --code-bg-light: #f5f5f5;
+      --code-bg-dark: #2d2d2d;
     }
+
     body {
       margin: 0;
       font-family: sans-serif;
@@ -25,83 +31,78 @@
       background: var(--bg-dark);
       color: var(--text-dark);
     }
-    /* -- Header */
+
+    pre {
+      background-color: var(--code-bg-light);
+      padding: 10px;
+      overflow-x: auto;
+      border-radius: 5px;
+      counter-reset: line;
+    }
+    body.dark-mode pre {
+      background-color: var(--code-bg-dark);
+    }
+    pre code {
+      display: block;
+    }
+    pre code > span {
+      counter-increment: line;
+    }
+    pre code > span::before {
+      content: counter(line);
+      display: inline-block;
+      width: 2em;
+      margin-right: 1em;
+      color: #888;
+      user-select: none;
+    }
+
     .header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       padding: 10px;
       background: #f3f3f3;
       position: fixed;
-      width: 100%;
       top: 0;
+      width: 100%;
       z-index: 1000;
     }
-    body.dark-mode .header {
-      background: #1f1f1f;
-    }
-    .bot-title {
-      margin: 0;
-      font-size: 1.2em;
-      flex: 1;
-      text-align: center;
-    }
-    #logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      margin-right: 8px;
-    }
-    #hamburger, #theme-toggle {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-    /* -- Layout */
-    .container {
-      display: flex;
-      margin-top: 60px;
-      height: calc(100vh - 60px);
-    }
-    .sidebar {
-      width: 220px;
-      background: #e0e0e0;
-      padding: 10px;
-      display: none;
-    }
+    body.dark-mode .header { background: #2a2a2a; }
+    #logo { height: 32px; width: 32px; border-radius: 50%; }
+    .bot-title { flex: 1; text-align: center; margin: 0; }
+    #hamburger, #theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+
+    .container { display: flex; margin-top: 60px; height: calc(100vh - 60px); }
+    .sidebar { width: 220px; background: #e0e0e0; padding: 10px; display: none; }
     .sidebar.show { display: block; }
-    .chat-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .chat-section { flex: 1; display: flex; flex-direction: column; align-items: center; }
+
     #chat-container {
-      width: 100%;
-      max-width: 720px;
+      width: 100%; max-width: 800px;
       flex: 1;
       overflow-y: auto;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    #placeholder {
-      text-align: center;
-      opacity: 0.6;
-      margin-top: 30%;
-    }
-    /* -- Input */
+    #placeholder { text-align: center; opacity: 0.5; margin-top: 30%; }
+
     .chat-input-container {
       border-top: 1px solid #ccc;
       padding: 10px;
-      background: #fff;
       width: 100%;
+      background: var(--bg-light);
     }
+    body.dark-mode .chat-input-container { background: var(--bg-dark); border-color: #444; }
+
     .chat-input-inner {
       display: flex;
       align-items: flex-end;
+      max-width: 800px;
+      margin: auto;
       gap: 8px;
-      max-width: 720px;
-      margin: 0 auto;
     }
     textarea#prompt {
       flex: 1;
@@ -117,126 +118,96 @@
       background: var(--accent);
       color: white;
       border: none;
-      border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 1em;
+      border-radius: 50%;
+      padding: 12px;
+      font-size: 1.2em;
+      cursor: pointer;
+      min-width: 48px;
+      min-height: 48px;
+    }
+
+    .message {
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 80%;
+      word-break: break-word;
+      position: relative;
+    }
+    .message.user {
+      background: var(--user-bg-light);
+      align-self: flex-end;
+      margin-left: auto;
+    }
+    body.dark-mode .message.user {
+      background: var(--user-bg-dark);
+    }
+    .message.bot {
+      background: var(--bot-bg-light);
+      align-self: flex-start;
+      margin-right: auto;
+    }
+    body.dark-mode .message.bot { background: var(--bot-bg-dark); color: var(--text-dark); }
+
+    .copy-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      font-size: 0.8em;
+      padding: 4px 8px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 3px;
       cursor: pointer;
     }
+    body.dark-mode .copy-btn { background: #339af0; }
+
     .dropdown { position: relative; }
     .dropdown-menu {
       display: none;
       position: absolute;
-      bottom: 100%;
-      left: 0;
+      bottom: 100%; left: 0;
       background: #fff;
       border: 1px solid #ccc;
       padding: 5px;
-      z-index: 10;
+      flex-direction: row;
+      gap: 5px;
+      z-index: 1001;
     }
+    .dropdown.show .dropdown-menu { display: flex; }
     .dropdown-menu button {
-      background: none;
-      border: none;
-      font-size: 1.3em;
-      cursor: pointer;
-      padding: 5px;
-    }
-    .dropdown.show .dropdown-menu { display: flex; gap: 5px; }
-    /* -- Messages */
-    .message {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 10px;
-      max-width: 80%;
-      white-space: pre-wrap;
-      position: relative;
-    }
-    .message.user {
-      background: #d1e7dd;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-    .message.bot {
-      background: #f8d7da;
-      align-self: flex-start;
-      margin-right: auto;
-    }
-    body.dark-mode .message.user { background: #005f4b; }
-    body.dark-mode .message.bot { background: #3a3a3a; }
-    pre {
-      background: #2d2d2d;
-      padding: 10px;
-      border-radius: 8px;
-      overflow-x: auto;
-      position: relative;
-      counter-reset: linenumber;
-    }
-    pre code {
-      display: block;
-      white-space: pre;
-      font-family: monospace;
-      counter-reset: linenumber;
-    }
-    pre code span {
-      counter-increment: linenumber;
-    }
-    pre code span::before {
-      content: counter(linenumber);
-      display: inline-block;
-      width: 2em;
-      margin-right: 1em;
-      color: #888;
-      text-align: right;
-    }
-    .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #555;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      font-size: 0.8em;
-      border-radius: 4px;
+      background: none; border: none; font-size: 1.3em;
       cursor: pointer;
     }
-    .edit-btn {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      background: #ffa500;
-      color: black;
-      border: none;
-      padding: 4px 8px;
-      font-size: 0.8em;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+
     @media (max-width: 768px) {
       .chat-input-inner { flex-direction: column; align-items: stretch; }
-      .send-btn { width: 100%; }
+      .send-btn { width: 100%; border-radius: 8px; }
+      textarea#prompt { margin: 0; }
       .dropdown-menu { flex-direction: column; }
-      textarea#prompt { width: 100%; }
     }
   </style>
 </head>
 <body class="light-mode">
   <div class="header">
-    <div style="display: flex; align-items: center;">
+    <div style="display:flex;align-items:center;">
       <img id="logo" src="https://via.placeholder.com/32" alt="Logo">
       <button id="hamburger" onclick="toggleSidebar()">☰</button>
     </div>
     <h1 class="bot-title">AI Code Assistant</h1>
     <button id="theme-toggle" onclick="toggleTheme()">🌞</button>
   </div>
+
   <div class="container">
     <div class="sidebar" id="sidebar">
       <button onclick="startNewChat()">+ New Chat</button>
       <div id="chat-history"></div>
     </div>
+
     <div class="chat-section">
       <div id="chat-container">
         <div id="placeholder">What’s on the agenda today?</div>
       </div>
+
       <div class="chat-input-container">
         <div class="chat-input-inner">
           <div class="dropdown" id="dropdown">
@@ -249,118 +220,114 @@
             </div>
           </div>
           <textarea id="prompt" placeholder="Ask something..." rows="1"></textarea>
-          <button onclick="askBot()" class="send-btn">➤ Send</button>
+          <button onclick="askBot()" class="send-btn">➤</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
   <script>
     let selectedMode = "lesson";
-    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("show"); }
-    function toggleTheme() {
-      document.body.classList.toggle("dark-mode");
-      document.body.classList.toggle("light-mode");
-      document.getElementById("theme-toggle").textContent =
-        document.body.classList.contains("dark-mode") ? "🌚" : "🌞";
-      document.getElementById("hljs-theme").href =
-        document.body.classList.contains("dark-mode")
-          ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
-          : "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
+
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("show");
     }
-    function toggleDropdown() { document.getElementById("dropdown").classList.toggle("show"); }
-    function setMode(mode) { selectedMode = mode; toggleDropdown(); }
+    function toggleTheme() {
+      const b = document.body;
+      b.classList.toggle("dark-mode");
+      document.getElementById("theme-toggle").textContent = b.classList.contains("dark-mode") ? "🌚" : "🌞";
+      document.getElementById("hljs-theme").href = b.classList.contains("dark-mode")
+        ? "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css"
+        : "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css";
+    }
+    function toggleDropdown() {
+      document.getElementById("dropdown").classList.toggle("show");
+    }
+    function setMode(mode) {
+      selectedMode = mode;
+      toggleDropdown();
+    }
     function startNewChat() {
       localStorage.clear();
       document.getElementById("chat-container").innerHTML = '<div id="placeholder">What’s on the agenda today?</div>';
     }
+
     async function askBot() {
-      const question = document.getElementById("prompt").value.trim();
-      if (!question) return;
-      addMessage("user", question);
-      document.getElementById("prompt").value = "";
-      document.getElementById("prompt").style.height = 'auto';
+      const promptEl = document.getElementById("prompt");
+      const q = promptEl.value.trim();
+      if (!q) return;
+      addMessage("user", q);
+      promptEl.value = ""; adjustTextarea(promptEl);
+
       try {
         const res = await fetch("/ask", {
-          method:"POST",
-          headers:{"Content‑Type":"application/json"},
-          body: JSON.stringify({prompt:question,mode:selectedMode})
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ prompt: q, mode: selectedMode })
         });
         const data = await res.json();
         addMessage("bot", data.reply);
       } catch {
-        addMessage("bot","❌ Couldn’t reach AI.");
+        addMessage("bot", "❌ Failed to connect.");
       }
     }
+
     function addMessage(sender, text) {
       const chat = document.getElementById("chat-container");
       document.getElementById("placeholder")?.remove();
+
       const msg = document.createElement("div");
       msg.className = `message ${sender}`;
-      const editBtn = document.createElement("button");
-      editBtn.innerText = "Edit";
-      editBtn.className = "edit-btn";
-      editBtn.onclick = () => enableEdit(msg, sender, text);
-      msg.appendChild(editBtn);
 
-      if (sender === "bot") {
-        const html = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-          const escaped = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-          return `<pre><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button><code class="${lang || ''}">${escaped}</code></pre>`;
-        });
-        msg.innerHTML += html;
-        hljs.highlightAll();
-      } else {
-        msg.appendChild(document.createTextNode(text));
-      }
+      const html = text.replace(/```(\w+)?\n([\s\S]*?)```/, (_, lang, code) => {
+        const escaped = hljs.highlightAuto(code, lang ? [lang] : undefined).value;
+        return `<pre><code>${escaped}</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>`;
+      });
+
+      msg.innerHTML = html.length ? html : text.replace(/\n/g, "<br>");
       chat.appendChild(msg);
+      hljs.highlightAll();
       chat.scrollTop = chat.scrollHeight;
       saveHistory(sender, text);
     }
-    function enableEdit(msgDiv, sender, oldText) {
-      const input = document.createElement("textarea");
-      input.value = oldText;
-      input.style.width = "100%";
-      msgDiv.innerHTML = "";
-      msgDiv.appendChild(input);
-      input.focus();
-      input.onblur = () => {
-        const newText = input.value.trim();
-        msgDiv.innerHTML = "";
-        addMessage(sender, newText || oldText);
-      };
-    }
-    function copyToClipboard(btn) {
-      const code = btn.nextElementSibling.textContent;
+
+    function copyCode(btn) {
+      const code = btn.previousElementSibling.innerText;
       navigator.clipboard.writeText(code).then(() => {
         btn.textContent = "Copied!";
-        setTimeout(() => (btn.textContent = "Copy"), 2000);
+        setTimeout(() => btn.textContent = "Copy", 2000);
       });
     }
-    function saveHistory(sender, text) {
-      const hist = JSON.parse(localStorage.getItem("chatHistory")) || [];
-      hist.push({sender, text});
-      localStorage.setItem("chatHistory", JSON.stringify(hist));
-    }
-    function loadHistory() {
-      const hist = JSON.parse(localStorage.getItem("chatHistory")) || [];
-      hist.forEach(m => addMessage(m.sender, m.text));
-    }
-    window.onload = loadHistory;
-    document.addEventListener("click", e => {
-      const dd = document.getElementById("dropdown");
-      if (!dd.contains(e.target)) dd.classList.remove("show");
-    });
+
+    document.getElementById("prompt").addEventListener("input", e => adjustTextarea(e.target));
     document.getElementById("prompt").addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         askBot();
       }
     });
-    document.getElementById("prompt").addEventListener("input", e => {
-      e.target.style.height = "auto";
-      e.target.style.height = `${e.target.scrollHeight}px`;
+
+    function adjustTextarea(el) {
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    }
+
+    function saveHistory(sender, text) {
+      let h = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+      h.push({ sender, text });
+      localStorage.setItem("chatHistory", JSON.stringify(h));
+    }
+    function loadHistory() {
+      let h = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+      h.forEach(m => addMessage(m.sender, m.text));
+    }
+    window.onload = loadHistory;
+
+    document.addEventListener("click", e => {
+      if (!document.getElementById("dropdown").contains(e.target)) {
+        document.getElementById("dropdown").classList.remove("show");
+      }
     });
   </script>
 </body>
