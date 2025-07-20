@@ -29,8 +29,9 @@ def ask():
                 {"role": "user", "content": full_prompt}
             ]
         )
-        answer = response.choices[0].message.content  # ✅ correct usage
+        answer = response.choices[0].message.content  # use dot notation instead of ['choices'][0]
         return jsonify({"reply": answer.strip()})
+
     except Exception as e:
         return jsonify({"reply": f"❌ Error: {str(e)}"}), 500
 
