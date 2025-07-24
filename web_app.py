@@ -1,39 +1,52 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-from openai import OpenAI
-from datetime import datetime
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+import openai
 import os
 
-app = Flask(__name__, template_folder="templates")
-CORS(app)
+app = Flask(__name__)
+app.secret_key = "your_secret_key"  # Needed for session management
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-@app.route("/")
+@app.route('/')
 def home():
-    return render_template("index.html")
+    return render_template('index.html')  # homepage explaining your bot
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        # Simple hardcoded login for demo
+        if username == 'admin' and password == 'password':
+            session['user'] = username
+            return redirect(url_for('chat'))
+        else:
+            return render_template('login.html', error="Invalid credentials")
+    return render_template('login.html')
+
+@app.route('/chat')
+def chat():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('chat.html')
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    data = request.get_json()
-    prompt = data.get("prompt", "")
-    mode = data.get("mode", "general")
+    user_message = request.json.get('message')
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an AI code assistant."},
+            {"role": "user", "content": user_message}
+        ]
+    )
+    reply = response['choices'][0]['message']['content']
+    return jsonify({'reply': reply})
 
-    full_prompt = f"[Mode: {mode}] {prompt}"
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('home'))
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": f"You are a helpful AI code assistant in {mode} mode."},
-                {"role": "user", "content": full_prompt}
-            ]
-        )
-        answer = response.choices[0].message.content  # use dot notation instead of ['choices'][0]
-        return jsonify({"reply": answer.strip()})
-
-    except Exception as e:
-        return jsonify({"reply": f"❌ Error: {str(e)}"}), 500
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
