@@ -42,10 +42,17 @@
       font-size: 1.1rem;
     }
 
+    .mode-label {
+      text-align: center;
+      font-size: 0.95rem;
+      padding: 0.25rem;
+      color: gray;
+    }
+
     .chat-container {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 130px);
+      height: calc(100vh - 160px);
       padding: 1rem;
       overflow-y: auto;
     }
@@ -130,6 +137,10 @@
       text-align: left;
     }
 
+    .dropdown-menu button:hover {
+      background-color: #f1f1f1;
+    }
+
     .dark-mode .dropdown-menu {
       background-color: #333;
       color: white;
@@ -156,9 +167,11 @@
   <div class="header">
     <div><strong>🧠 AI Code Assistant</strong></div>
     <div>
-      <button onclick="toggleDarkMode()">🌙</button>
+      <button onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
     </div>
   </div>
+
+  <div class="mode-label" id="modeLabel">Mode: 📚 Mini Lesson</div>
 
   <div class="chat-container" id="chatContainer">
     <div id="placeholder" style="text-align: center; margin-top: 50px; color: gray;">Start chatting with your assistant...</div>
@@ -166,25 +179,35 @@
 
   <div class="input-area">
     <textarea id="prompt" placeholder="Ask something..." oninput="adjustTextarea(this)" onkeydown="handleKey(event)"></textarea>
-    <button onclick="askBot()">➤</button>
-    <button class="dropdown-toggle" onclick="toggleDropdown()">☰</button>
+    <button onclick="askBot()" title="Send Message">➤</button>
+    <button class="dropdown-toggle" onclick="toggleDropdown()" title="Select Mode">☰</button>
   </div>
 
   <div class="dropdown-menu" id="modeDropdown">
-    <button onclick="setMode('lesson')">📚 Mini Lesson</button>
-    <button onclick="setMode('bugfix')">🐛 Bug Fix</button>
-    <button onclick="setMode('quiz')">🧠 Quiz Mode</button>
-    <button onclick="setMode('explainer')">💬 Code Explainer</button>
-    <button onclick="setMode('career')">🎓 Tech Career Guide</button>
+    <button onclick="setMode('general')" title="General AI Chat">💬 General</button>
+    <button onclick="setMode('lesson')" title="Explain Concepts">📚 Mini Lesson</button>
+    <button onclick="setMode('bugfix')" title="Fix Errors">🐛 Bug Fix</button>
+    <button onclick="setMode('quiz')" title="Practice Quiz">🧠 Quiz Mode</button>
+    <button onclick="setMode('explainer')" title="Explain Code">💬 Code Explainer</button>
+    <button onclick="setMode('career')" title="Career Advice">🎓 Tech Career Guide</button>
   </div>
 
   <script>
     let selectedMode = "lesson";
-    const allowedModes = ["lesson", "bugfix", "quiz", "explainer", "career"];
+    const allowedModes = ["lesson", "bugfix", "quiz", "explainer", "career", "general"];
+    const modeNames = {
+      general: "💬 General",
+      lesson: "📚 Mini Lesson",
+      bugfix: "🐛 Bug Fix",
+      quiz: "🧠 Quiz Mode",
+      explainer: "💬 Code Explainer",
+      career: "🎓 Tech Career Guide"
+    };
 
     function setMode(mode) {
       if (!allowedModes.includes(mode)) return;
       selectedMode = mode;
+      document.getElementById("modeLabel").innerText = `Mode: ${modeNames[mode]}`;
       toggleDropdown();
     }
 

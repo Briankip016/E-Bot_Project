@@ -1,47 +1,39 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
+from flask import Flask, request, jsonify
 from openai import OpenAI
-from datetime import datetime
-import os
 from dotenv import load_dotenv
+import os
+
 load_dotenv()
-
-
-app = Flask(__name__, template_folder="templates")
-CORS(app)
-
+app = Flask(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-@app.route("/")
-def home():
-    return render_template("index.html")
 
 @app.route('/ask', methods=['POST'])
 def ask():
     data = request.get_json()
-    prompt = data.get("prompt", "")
-    mode = data.get("mode", "lesson")
+    user_message = data.get('message', '')
+    mode = data.get('mode', 'general')
 
-    # Validate mode
-    allowed_modes = {"lesson", "bugfix", "quiz", "explainer", "career"}
-    if mode not in allowed_modes:
-        return jsonify({"reply": "❌ Unsupported mode selected."}), 400
+    # Build a system prompt based on selected mode
+    if mode == 'mini-lesson':
+        system_prompt = "You are a programming tutor. Explain the concept in a short and clear way, suitable for a beginner."
+    elif mode == 'bug-fix':
+        system_prompt = "You are a programming assistant that helps fix bugs. Read the code and provide corrections with brief explanations."
+    elif mode == 'quiz':
+        system_prompt = "You are a programming quiz master. Ask the user a beginner-level quiz question related to programming."
+    else:  # General mode
+        system_prompt = "You are an AI programming assistant that answers coding questions clearly and helpfully."
 
-    full_prompt = f"[Mode: {mode}] {prompt}"
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message}
+    ]
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": f"You are a helpful AI assistant specializing in {mode} tasks."},
-                {"role": "user", "content": full_prompt}
-            ]
+            model="gpt-4",  # or gpt-3.5-turbo
+            messages=messages
         )
-        answer = response.choices[0].message.content
-        return jsonify({"reply": answer.strip()})
-
+        reply = response.choices[0].message.content
+        return jsonify({'answer': reply})
     except Exception as e:
-        return jsonify({"reply": f"❌ Error: {str(e)}"}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        return jsonify({'answer': f"⚠️ Error: {str(e)}"}), 500
