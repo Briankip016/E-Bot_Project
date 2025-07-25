@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from openai import OpenAI
+from datetime import datetime
 import os
 
 app = Flask(__name__, template_folder="templates")
@@ -10,7 +11,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route("/")
 def home():
-    return render_template("main.html")  # or "index.html" if that’s your homepage
+    return render_template("main.html")
 
 @app.route('/ask', methods=['POST'])
 def ask():
@@ -18,6 +19,7 @@ def ask():
     prompt = data.get("prompt", "")
     mode = data.get("mode", "lesson")
 
+    # Validate mode
     allowed_modes = {"lesson", "bugfix", "quiz", "explainer", "career"}
     if mode not in allowed_modes:
         return jsonify({"reply": "❌ Unsupported mode selected."}), 400
