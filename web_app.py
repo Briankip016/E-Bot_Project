@@ -14,7 +14,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route("/")
 def home():
-    return render_template("main.html")
+    return render_template("index.html")
 
 @app.route('/ask', methods=['POST'])
 def ask():
