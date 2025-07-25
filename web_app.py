@@ -3,6 +3,9 @@ from flask_cors import CORS
 from openai import OpenAI
 from datetime import datetime
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = Flask(__name__, template_folder="templates")
 CORS(app)
