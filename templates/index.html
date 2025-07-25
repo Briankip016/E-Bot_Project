@@ -193,86 +193,94 @@
   </div>
 
   <script>
-    let selectedMode = "lesson";
-    const allowedModes = ["lesson", "bugfix", "quiz", "explainer", "career", "general"];
-    const modeNames = {
-      general: "💬 General",
-      lesson: "📚 Mini Lesson",
-      bugfix: "🐛 Bug Fix",
-      quiz: "🧠 Quiz Mode",
-      explainer: "💬 Code Explainer",
-      career: "🎓 Tech Career Guide"
-    };
+  let selectedMode = "lesson";
+  const allowedModes = ["lesson", "bugfix", "quiz", "explainer", "career", "general"];
+  const modeNames = {
+    general: "💬 General",
+    lesson: "📚 Mini Lesson",
+    bugfix: "🐛 Bug Fix",
+    quiz: "🧠 Quiz Mode",
+    explainer: "💬 Code Explainer",
+    career: "🎓 Tech Career Guide"
+  };
 
-    function setMode(mode) {
-      if (!allowedModes.includes(mode)) return;
-      selectedMode = mode;
-      document.getElementById("modeLabel").innerText = `Mode: ${modeNames[mode]}`;
-      toggleDropdown();
+  function setMode(mode) {
+    if (!allowedModes.includes(mode)) return;
+    selectedMode = mode;
+    document.getElementById("modeLabel").innerText = `Mode: ${modeNames[mode]}`;
+    toggleDropdown();
+  }
+
+  function toggleDropdown() {
+    const menu = document.getElementById("modeDropdown");
+    menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+  }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+  }
+
+  function adjustTextarea(el) {
+    el.style.height = "auto";
+    el.style.height = (el.scrollHeight) + "px";
+  }
+
+  function handleKey(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      askBot();
+    }
+  }
+
+  async function askBot() {
+    const promptEl = document.getElementById("prompt");
+    const q = promptEl.value.trim();
+    if (!q) return;
+    addMessage("user", q);
+    promptEl.value = "";
+    adjustTextarea(promptEl);
+
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: q, mode: selectedMode })
+      });
+      const data = await res.json();
+      addMessage("bot", data.reply);
+    } catch {
+      addMessage("bot", "❌ Failed to connect.");
+    }
+  }
+
+  function addMessage(sender, text) {
+    const chat = document.getElementById("chatContainer");
+    const placeholder = document.getElementById("placeholder");
+    if (placeholder) placeholder.remove();
+
+    const msg = document.createElement("div");
+    msg.className = `message ${sender}`;
+    msg.innerHTML = text;
+
+    if (sender === "bot" && text.includes("<code>")) {
+      const copyBtn = document.createElement("button");
+      copyBtn.innerHTML = "📋";
+      copyBtn.className = "copy-btn";
+      copyBtn.onclick = () => navigator.clipboard.writeText(msg.textContent);
+      msg.appendChild(copyBtn);
     }
 
-    function toggleDropdown() {
-      const menu = document.getElementById("modeDropdown");
-      menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+    chat.appendChild(msg);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    const chatContainer = document.getElementById("chatContainer");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+  }
+</script>
 
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark-mode");
-    }
-
-    function adjustTextarea(el) {
-      el.style.height = "auto";
-      el.style.height = (el.scrollHeight) + "px";
-    }
-
-    function handleKey(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        askBot();
-      }
-    }
-
-    async function askBot() {
-      const promptEl = document.getElementById("prompt");
-      const q = promptEl.value.trim();
-      if (!q) return;
-      addMessage("user", q);
-      promptEl.value = "";
-      adjustTextarea(promptEl);
-
-      try {
-        const res = await fetch("/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: q, mode: selectedMode })
-        });
-        const data = await res.json();
-        addMessage("bot", data.reply);
-      } catch {
-        addMessage("bot", "❌ Failed to connect.");
-      }
-    }
-
-    function addMessage(sender, text) {
-      const chat = document.getElementById("chatContainer");
-      const placeholder = document.getElementById("placeholder");
-      if (placeholder) placeholder.remove();
-
-      const msg = document.createElement("div");
-      msg.className = `message ${sender}`;
-      msg.innerHTML = text;
-
-      if (sender === "bot" && text.includes("<code>")) {
-        const copyBtn = document.createElement("button");
-        copyBtn.innerHTML = "📋";
-        copyBtn.className = "copy-btn";
-        copyBtn.onclick = () => navigator.clipboard.writeText(msg.textContent);
-        msg.appendChild(copyBtn);
-      }
-
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
-  </script>
 </body>
 </html>
